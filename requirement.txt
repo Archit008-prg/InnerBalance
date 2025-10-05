@@ -1,0 +1,19 @@
+# Web Framework
+Django==4.2.7
+djangorestframework==3.14.0
+
+# Database
+psycopg2-binary==2.9.7
+
+# Authentication
+djangorestframework-simplejwt==5.3.0
+
+# Environment Variables
+python-decouple==3.8
+
+# CORS for React-Django communication
+django-cors-headers==4.3.1
+
+# API Documentation
+drf-yasg==1.21.5
+
