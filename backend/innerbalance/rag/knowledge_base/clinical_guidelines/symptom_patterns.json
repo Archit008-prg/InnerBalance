@@ -1,0 +1,39 @@
+{
+  "depression_follow_ups": {
+    "trigger_symptoms": ["loss_of_interest", "depressed_mood", "fatigue"],
+    "questions": [
+      "How long have you been feeling this way?",
+      "What activities used to bring you joy that no longer do?",
+      "Have you noticed changes in your sleep patterns?",
+      "How would you describe your energy levels throughout the day?",
+      "Have you experienced changes in your appetite or weight?",
+      "Do you find it difficult to concentrate or make decisions?",
+      "Have you had feelings of worthlessness or excessive guilt?",
+      "What kind of support system do you have available?"
+    ]
+  },
+  "anxiety_follow_ups": {
+    "trigger_symptoms": ["worry", "nervousness", "tension"],
+    "questions": [
+      "What specific situations make you feel most anxious?",
+      "Do you experience physical symptoms when anxious (racing heart, sweating, trembling)?",
+      "How does anxiety affect your daily activities?",
+      "Do you avoid certain situations because of anxiety?",
+      "What helps you feel less anxious?",
+      "How long do anxious episodes typically last?",
+      "Do you have panic attacks?"
+    ]
+  },
+  "sleep_issues_follow_ups": {
+    "trigger_symptoms": ["insomnia", "hypersomnia", "fatigue"],
+    "questions": [
+      "What time do you usually go to bed and wake up?",
+      "How long does it take you to fall asleep?",
+      "Do you wake up during the night? How often?",
+      "Do you feel rested when you wake up?",
+      "Do you nap during the day?",
+      "Any nightmares or disturbing dreams?",
+      "Bedtime routines and environment?"
+    ]
+  }
+}

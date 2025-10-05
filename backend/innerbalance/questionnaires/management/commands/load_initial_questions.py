@@ -91,5 +91,5 @@ class Command(BaseCommand):
                 self.stdout.write(f"Already exists: {q_data['text'][:50]}...")
 
         self.stdout.write(
-            self.style.SUCCESS('Successfully loaded 10 final refined questions!')
+            self.style.SUCCESS('Successfully loaded initial questions.')
         )

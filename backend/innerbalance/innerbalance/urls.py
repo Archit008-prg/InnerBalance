@@ -14,9 +14,26 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+
+
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
+from django.http import JsonResponse
+
+# Simple API root view
+def api_root(request):
+    return JsonResponse({
+        'message': 'InnerBalance API is running!',
+        'endpoints': {
+            'admin': '/admin/',
+            'api': '/api/',
+            'auth': '/auth/'
+        }
+    })
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('api/', include('api.urls')),
+    path('auth/', include('authentication.urls')),
+    path('', api_root, name='api-root'),  # Simple API response instead of HTML
 ]
