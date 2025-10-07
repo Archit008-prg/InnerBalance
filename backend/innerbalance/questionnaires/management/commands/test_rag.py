@@ -15,10 +15,7 @@ class Command(BaseCommand):
             # Test analysis
             self.stdout.write("\n1. Testing Answer Analysis...")
             # Anxiety test case
-            sample_answers = {
-                0: 0, 1: 0, 2: 1, 3: 1, 4: 0,
-                5: 3, 6: 3, 7: 2, 8: 0, 9: 2  # High anxiety scores
-            }
+            sample_answers = {0: 3, 1: 3, 2: 3, 3: 3, 4: 3, 5: 3, 6: 3, 7: 3, 8: 0}
             
             analysis = rag.analyze_initial_answers(sample_answers)
             self.stdout.write(f"✅ Analysis: {analysis['primary_concerns']}")
