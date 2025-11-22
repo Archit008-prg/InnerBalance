@@ -20,7 +20,6 @@ from django.contrib import admin
 from django.urls import path, include
 from django.http import JsonResponse
 
-# Simple API root view
 def api_root(request):
     return JsonResponse({
         'message': 'InnerBalance API is running!',
@@ -34,6 +33,6 @@ def api_root(request):
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('api.urls')),
-    path('auth/', include('authentication.urls')),
-    path('', api_root, name='api-root'),  # Simple API response instead of HTML
+    path('auth/', include('authentication.urls')),  # Includes all auth URLs under /auth/
+    path('', api_root, name='api-root'),
 ]
