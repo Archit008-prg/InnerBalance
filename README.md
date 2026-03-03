@@ -2,7 +2,7 @@
   <img src="./Inner Balance Logo.png" alt="Inner-Balance Logo" width="180" />
 </p>
 
-<h1 align="center">#Inner-Balance</h1>
+<h1 align="center">Inner-Balance</h1>
 
 <p align="center">
   <strong>"Reconnecting Minds, Restoring Balance."</strong>
