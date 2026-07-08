@@ -1,1 +1,13 @@
 myenv
+.env
+db.sqlite3
+__pycache__/
+*.pyc
+node_modules/
+.next/
+.env.local
+.env.*.local
+chroma_db/
+vector_store/
+**/chroma_db/
+**/vector_store/
