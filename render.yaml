@@ -1,0 +1,58 @@
+services:
+  # 1. Django Backend Web Service
+  - type: web
+    name: innerbalance-backend
+    env: python
+    buildCommand: |
+      cd backend/innerbalance
+      pip install -r ../requirements.txt
+      python manage.py migrate
+    startCommand: |
+      cd backend/innerbalance
+      gunicorn innerbalance.wsgi:application --bind 0.0.0.0:$PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: USE_POSTGRES
+        value: "true"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: innerbalance-db
+          property: connectionString
+      - key: HF_TOKEN
+        sync: false # Set this in the Render UI dashboard
+      - key: DB_NAME
+        value: "innerbalance"
+      - key: DB_USER
+        value: "postgres"
+      - key: DB_PASSWORD
+        sync: false
+      - key: DB_HOST
+        sync: false
+      - key: DB_PORT
+        value: "5432"
+
+  # 2. Next.js Frontend Web Service
+  - type: web
+    name: innerbalance-frontend
+    env: node
+    buildCommand: |
+      cd Frontend/Inner-Balance/my-app
+      npm install
+      npm run build
+    startCommand: |
+      cd Frontend/Inner-Balance/my-app
+      npm run start
+    envVars:
+      - key: NEXT_PUBLIC_API_URL
+        fromService:
+          type: web
+          name: innerbalance-backend
+          property: host
+
+databases:
+  # 3. Dedicated PostgreSQL Instance
+  - name: innerbalance-db
+    databaseName: innerbalance
+    user: postgres
+    plan: free

@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  # 1. PostgreSQL Database
+  db:
+    image: postgres:15-alpine
+    container_name: innerbalance-db
+    restart: always
+    environment:
+      POSTGRES_DB: innerbalance
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: your_db_secure_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  # 2. Django Backend
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: innerbalance-backend
+    restart: always
+    command: sh -c "python manage.py migrate && gunicorn innerbalance.wsgi:application --bind 0.0.0.0:8000"
+    ports:
+      - "8000:8000"
+    environment:
+      - USE_POSTGRES=true
+      - DB_NAME=innerbalance
+      - DB_USER=postgres
+      - DB_PASSWORD=your_db_secure_password
+      - DB_HOST=db
+      - DB_PORT=5432
+      - HF_TOKEN=hf_your_token_here
+    depends_on:
+      - db
+
+  # 3. Next.js Frontend
+  frontend:
+    build:
+      context: ./Frontend/Inner-Balance/my-app
+      dockerfile: Dockerfile
+    container_name: innerbalance-frontend
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://backend:8000
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
