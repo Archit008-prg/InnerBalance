@@ -2,8 +2,6 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
-import greenFocus from "./assets/green_focus.png";
-import boardImage from "./assets/board.png";
 
 const Helphero = () => {
   const [isDarkMode, setIsDarkMode] = useState(false);

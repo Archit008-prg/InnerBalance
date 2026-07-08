@@ -8,7 +8,6 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { register } from "../../lib/api";
 import greenFocus from "../components/assets/green_focus.png";
-import boardImage from "../components/assets/board.png";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -110,7 +109,7 @@ export default function RegisterPage() {
       <div 
         className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat filter blur-md scale-105 transition-all duration-300"
         style={{
-          backgroundImage: `url(${isDarkMode ? greenFocus.src : boardImage.src})`,
+          backgroundImage: `url(${greenFocus.src})`,
         }}
       />
       {/* Background gradients overlays (semi-transparent dark in dark theme, very clear in light theme) */}

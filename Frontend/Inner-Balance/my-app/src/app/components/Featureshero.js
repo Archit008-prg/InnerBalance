@@ -2,8 +2,6 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { AiOutlineSmile, AiOutlineHeart, AiOutlineBulb } from "react-icons/ai";
-import greenFocus from "./assets/green_focus.png";
-import boardImage from "./assets/board.png";
 
 const Featureshero = () => {
   const [isDarkMode, setIsDarkMode] = useState(false);

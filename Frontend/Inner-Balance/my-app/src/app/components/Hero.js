@@ -4,7 +4,6 @@ import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import boardImage from "./assets/board.png";
 import greenFocus from "./assets/green_focus.png";
 import { Heart, Activity, CheckCircle2, ShieldAlert } from "lucide-react";
 
@@ -73,7 +72,7 @@ const Hero = () => {
       ref={heroRef}
       className="relative flex flex-col justify-center items-center px-6 lg:px-12 pt-28 sm:pt-36 pb-16 sm:pb-24 w-full overflow-hidden min-h-screen transition-colors duration-300 z-10"
       style={{
-        backgroundImage: `url(${isDarkMode ? greenFocus.src : boardImage.src})`,
+        backgroundImage: `url(${greenFocus.src})`,
         backgroundSize: "cover",
         backgroundPosition: "center",
         backgroundRepeat: "no-repeat",
