@@ -4,12 +4,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { gsap } from "gsap";
-import { Menu, X, Sun, Moon } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import logo from "./assets/logo.png";
 
 const Navbar = () => {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [theme, setTheme] = useState("light");
+  const [theme, setTheme] = useState("dark");
   const pathname = usePathname();
   const navRef = useRef(null);
   const menuRef = useRef(null);
@@ -34,21 +34,9 @@ const Navbar = () => {
   }, [pathname]);
 
   useEffect(() => {
-    const isDark = document.documentElement.classList.contains("dark");
-    setTheme(isDark ? "dark" : "light");
+    document.documentElement.classList.add("dark");
+    setTheme("dark");
   }, []);
-
-  const toggleTheme = () => {
-    if (theme === "light") {
-      document.documentElement.classList.add("dark");
-      localStorage.setItem("theme", "dark");
-      setTheme("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-      localStorage.setItem("theme", "light");
-      setTheme("light");
-    }
-  };
 
   useEffect(() => {
     if (navRef.current) {
@@ -122,16 +110,8 @@ const Navbar = () => {
           ))}
         </ul>
 
-        {/* Theme and Auth Buttons */}
+        {/* Auth Buttons */}
         <div className="hidden md:flex items-center gap-4">
-          <button
-            onClick={toggleTheme}
-            className="p-2 text-foreground hover:text-primary-accent rounded-full transition-all focus:outline-none cursor-pointer"
-            aria-label="Toggle Theme"
-          >
-            {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
-          </button>
-          
           {isLoggedIn ? (
             <button
               onClick={handleSignOut}
@@ -149,15 +129,8 @@ const Navbar = () => {
           )}
         </div>
 
-        {/* Mobile Menu Button & Mobile Theme Toggle */}
+        {/* Mobile Menu Button */}
         <div className="md:hidden flex items-center gap-2">
-          <button
-            onClick={toggleTheme}
-            className="p-2 text-foreground hover:text-primary-accent rounded-full transition-all focus:outline-none"
-            aria-label="Toggle Theme"
-          >
-            {theme === "dark" ? <Sun size={20} /> : <Moon size={20} />}
-          </button>
           <button
             onClick={() => setMenuOpen(!menuOpen)}
             className="text-foreground focus:outline-none p-2"

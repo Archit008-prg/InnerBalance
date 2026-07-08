@@ -5,7 +5,7 @@ import "./globals.css";
 const geistSans = Geist({
   subsets: ["latin"],
   variable: "--font-geist-sans",
-  weight: ["400", "500", "600", "700"], // optional, if needed
+  weight: ["400", "500", "600", "700"],
 });
 
 // Mono font (for code blocks, monospace areas)
@@ -24,17 +24,13 @@ export const metadata = {
 export default function RootLayout({ children }) {
   const themeScript = `
     (function() {
-      const theme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-      if (theme === 'dark') {
-        document.documentElement.classList.add('dark');
-      } else {
-        document.documentElement.classList.remove('dark');
-      }
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
     })();
   `;
 
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`} suppressHydrationWarning>
+    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} dark`} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
