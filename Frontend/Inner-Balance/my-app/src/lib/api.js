@@ -10,7 +10,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
 const FALLBACK_QUESTIONS = [
   {
     id: 1,
-    text: "Over the last 2 weeks, how often have you been bothered by feeling down, depressed, or hopeless?",
+    text: "How often have you felt little interest or pleasure in doing things over the past two weeks?",
     question_type: "scale",
     type: "scale",
     category: "depression",
@@ -18,7 +18,7 @@ const FALLBACK_QUESTIONS = [
   },
   {
     id: 2,
-    text: "Over the last 2 weeks, how often have you been bothered by little interest or pleasure in doing things?",
+    text: "How often have you felt down, depressed, or hopeless during the last two weeks?",
     question_type: "scale",
     type: "scale",
     category: "depression",
@@ -26,7 +26,7 @@ const FALLBACK_QUESTIONS = [
   },
   {
     id: 3,
-    text: "Over the last 2 weeks, how often have you been bothered by trouble falling or staying asleep, or sleeping too much?",
+    text: "How often have you had trouble falling asleep, staying asleep, or sleeping too much?",
     question_type: "scale",
     type: "scale",
     category: "sleep",
@@ -34,7 +34,7 @@ const FALLBACK_QUESTIONS = [
   },
   {
     id: 4,
-    text: "Over the last 2 weeks, how often have you been bothered by feeling tired or having little energy?",
+    text: "How often have you felt tired or had little energy, even after rest?",
     question_type: "scale",
     type: "scale",
     category: "energy",
@@ -42,7 +42,7 @@ const FALLBACK_QUESTIONS = [
   },
   {
     id: 5,
-    text: "Over the last 2 weeks, how often have you been bothered by poor appetite or overeating?",
+    text: "How often have you experienced poor appetite or overeating in the past two weeks?",
     question_type: "scale",
     type: "scale",
     category: "appetite",
@@ -50,43 +50,107 @@ const FALLBACK_QUESTIONS = [
   },
   {
     id: 6,
-    text: "Over the last 2 weeks, how often have you been bothered by feeling bad about yourself, or that you are a failure, or have let yourself or your family down?",
+    text: "How often have you felt nervous, anxious, or on edge?",
     question_type: "scale",
     type: "scale",
-    category: "mood",
+    category: "anxiety",
     order: 6
   },
   {
     id: 7,
-    text: "Over the last 2 weeks, how often have you been bothered by trouble concentrating on things, such as reading the newspaper or watching television?",
+    text: "How often have you been unable to stop or control worrying?",
     question_type: "scale",
     type: "scale",
-    category: "general",
+    category: "anxiety",
     order: 7
   },
   {
     id: 8,
-    text: "Over the last 2 weeks, how often have you been bothered by moving or speaking so slowly that other people could have noticed, or the opposite - being so fidgety or restless that you have been moving around a lot more than usual?",
+    text: "How often have you felt so restless that it is hard to sit still?",
     question_type: "scale",
     type: "scale",
-    category: "general",
+    category: "anxiety",
     order: 8
   },
   {
     id: 9,
-    text: "Over the last 2 weeks, how often have you been bothered by thoughts that you would be better off dead, or of hurting yourself?",
+    text: "How often have you become easily annoyed or irritable?",
     question_type: "scale",
     type: "scale",
-    category: "general",
+    category: "anxiety",
     order: 9
   },
   {
     id: 10,
-    text: "Over the last 2 weeks, how often have you been bothered by feeling nervous, anxious, or on edge?",
+    text: "How often have you felt afraid as if something awful might happen?",
     question_type: "scale",
     type: "scale",
     category: "anxiety",
     order: 10
+  },
+  {
+    id: 11,
+    text: "How often have you felt bad about yourself - or that you are a failure or have let yourself or your family down?",
+    question_type: "scale",
+    type: "scale",
+    category: "depression",
+    order: 11
+  },
+  {
+    id: 12,
+    text: "How often have you had trouble concentrating on things, such as reading the newspaper or watching television?",
+    question_type: "scale",
+    type: "scale",
+    category: "depression",
+    order: 12
+  },
+  {
+    id: 13,
+    text: "How often have you moved or spoken so slowly that other people could have noticed? Or the opposite - being so fidgety or restless that you have been moving around a lot more than usual?",
+    question_type: "scale",
+    type: "scale",
+    category: "depression",
+    order: 13
+  },
+  {
+    id: 14,
+    text: "How often have you worried too much about different things?",
+    question_type: "scale",
+    type: "scale",
+    category: "anxiety",
+    order: 14
+  },
+  {
+    id: 15,
+    text: "How often have you had trouble relaxing?",
+    question_type: "scale",
+    type: "scale",
+    category: "anxiety",
+    order: 15
+  },
+  {
+    id: 16,
+    text: "On a scale of 1.0 to 5.0, how intense has your anxiety or worry been when at its worst over the past two weeks?",
+    question_type: "slider",
+    type: "slider",
+    category: "anxiety",
+    order: 16
+  },
+  {
+    id: 17,
+    text: "On a scale of 1.0 to 5.0, how intense has your low mood or lack of interest been when at its worst over the past two weeks?",
+    question_type: "slider",
+    type: "slider",
+    category: "depression",
+    order: 17
+  },
+  {
+    id: 18,
+    text: "If you checked off any problems, how difficult have these problems made it for you to do your work, take care of things at home, or get along with other people?",
+    question_type: "scale",
+    type: "scale",
+    category: "functioning",
+    order: 18
   }
 ];
 
@@ -127,11 +191,20 @@ async function apiRequest(endpoint, options = {}, retries = 2) {
   
   // Create abort controller for timeout
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+  const timeoutId = setTimeout(() => controller.abort(), 35000); // 35 second timeout
+  
+  // Skip sending JWT headers for public endpoints to prevent false-positives
+  const publicEndpoints = ['/questions/', '/test/', '/system-status/'];
+  const isPublic = publicEndpoints.some(ep => endpoint.endsWith(ep));
+  
+  // Load token from localStorage if in browser environment and endpoint is not public
+  const token = !isPublic && typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
+  const authHeader = token ? { 'Authorization': `Bearer ${token}` } : {};
   
   const config = {
     headers: {
       'Content-Type': 'application/json',
+      ...authHeader,
       ...options.headers,
     },
     signal: controller.signal,
@@ -146,6 +219,17 @@ async function apiRequest(endpoint, options = {}, retries = 2) {
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         const errorMessage = errorData.error || errorData.detail || `HTTP error! status: ${response.status}`;
+        
+        // Handle token expiration / unauthorized error by clearing session and redirecting
+        if (response.status === 401 && typeof window !== 'undefined') {
+          console.warn('Session expired or invalid token. Redirecting to login...');
+          localStorage.removeItem('access_token');
+          localStorage.removeItem('refresh_token');
+          localStorage.removeItem('user_role');
+          localStorage.removeItem('user_name');
+          window.location.href = '/login';
+          return;
+        }
         
         // Don't retry on 4xx errors (client errors)
         if (response.status >= 400 && response.status < 500) {
@@ -275,10 +359,7 @@ export async function analyzeInitialAssessment(answers, assessmentId = null) {
       },
       follow_up_questions: [
         'Can you tell me more about how you\'ve been feeling lately?',
-        'What activities or situations have been most challenging for you?',
-        'How long have you been experiencing these feelings?',
-        'What support systems do you have in place?',
-        'Have you noticed any changes in your daily routine?'
+        'What activities or situations have been most challenging for you?'
       ],
       risk_level: riskLevel,
       status: 'success',
@@ -328,6 +409,110 @@ export async function generateClinicalReport(assessmentId, initialAnswers, follo
  */
 export async function getSystemStatus() {
   return apiRequest('/system-status/');
+}
+
+/**
+ * Log in a user (Patient or Doctor)
+ */
+export async function login(username, password) {
+  const url = `${API_URL}/auth/token/`;
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ username, password })
+  });
+  
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err.detail || 'Invalid username or password');
+  }
+  
+  const tokens = await response.json();
+  localStorage.setItem('access_token', tokens.access);
+  localStorage.setItem('refresh_token', tokens.refresh);
+  
+  // Fetch profile to verify role and cache profile info
+  const profile = await getProfile();
+  localStorage.setItem('user_role', profile.role);
+  localStorage.setItem('user_name', `${profile.first_name} ${profile.last_name}`.trim() || profile.username);
+  return profile;
+}
+
+/**
+ * Register a new user
+ */
+export async function register(userData) {
+  const url = `${API_URL}/auth/register/`;
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(userData)
+  });
+  
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err.error || err.detail || 'Registration failed');
+  }
+  
+  return await response.json();
+}
+
+/**
+ * Get current user profile
+ */
+export async function getProfile() {
+  const url = `${API_URL}/auth/me/`;
+  const token = localStorage.getItem('access_token');
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    }
+  });
+  
+  if (!response.ok) {
+    throw new Error('Failed to retrieve user profile');
+  }
+  
+  return await response.json();
+}
+
+/**
+ * Get Doctor Dashboard assessments and reports
+ */
+export async function getDoctorDashboard() {
+  return await apiRequest('/doctor/dashboard/');
+}
+
+/**
+ * Get Patient Dashboard assessments and history
+ */
+export async function getPatientDashboard() {
+  return await apiRequest('/patient/dashboard/');
+}
+
+/**
+ * Log out current user
+ */
+export function logout() {
+  localStorage.removeItem('access_token');
+  localStorage.removeItem('refresh_token');
+  localStorage.removeItem('user_role');
+  localStorage.removeItem('user_name');
+}
+
+/**
+ * Delete a patient assessment record (Doctor only)
+ */
+export async function deleteAssessment(assessmentId) {
+  return await apiRequest(`/doctor/assessments/${assessmentId}/delete/`, {
+    method: 'DELETE',
+  });
 }
 
 export { API_BASE_URL, API_URL, FALLBACK_QUESTIONS, checkBackendHealth };

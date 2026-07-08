@@ -10,7 +10,7 @@ const ContactForm = () => {
   });
 
   return (
-    <section className="relative bg-gradient-to-b from-white via-yellow-50 to-gray-50 px-6 py-16 sm:py-24 lg:px-8 overflow-hidden">
+    <section className="relative bg-background text-foreground px-6 py-16 sm:py-24 lg:px-8 overflow-hidden transition-colors duration-300">
       
       {/*  Boundary Decorative Image */}
       <motion.div
@@ -23,7 +23,7 @@ const ContactForm = () => {
           src={formBoundary}
           alt="Form Decorative Boundary"
           fill
-          className="object-contain scale-110"
+          className="object-contain scale-110 dark:invert"
           priority
         />
       </motion.div>
@@ -33,13 +33,13 @@ const ContactForm = () => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 0.15 }}
         transition={{ duration: 1.5 }}
-        className="absolute top-20 left-20 w-40 h-40 bg-yellow-300 rounded-full blur-3xl"
+        className="absolute top-20 left-20 w-40 h-40 bg-primary-accent/15 rounded-full blur-3xl"
       ></motion.div>
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 0.1 }}
         transition={{ delay: 0.3, duration: 1.8 }}
-        className="absolute bottom-20 right-24 w-44 h-44 bg-yellow-400 rounded-full blur-3xl"
+        className="absolute bottom-20 right-24 w-44 h-44 bg-primary-accent/10 rounded-full blur-3xl"
       ></motion.div>
 
       <div className="relative z-10 mx-auto max-w-2xl flex flex-col items-center justify-center text-center">
@@ -49,13 +49,13 @@ const ContactForm = () => {
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true }}
-          className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-gray-900 drop-shadow-[0_2px_6px_rgba(0,0,0,0.15)]"
+          className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-foreground drop-shadow-[0_2px_6px_rgba(0,0,0,0.1)]"
         >
           Let’s Connect with{" "}
           <motion.span
-            animate={{ backgroundColor: ["#FDE68A", "#FACC15", "#FDE68A"] }}
+            animate={{ backgroundColor: ["rgba(0, 223, 129, 0.15)", "rgba(0, 223, 129, 0.35)", "rgba(0, 223, 129, 0.15)"] }}
             transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-            className="bg-yellow-300 px-3 py-1 rounded-md"
+            className="bg-primary-accent/15 border border-primary-accent/20 px-3 py-1 rounded-md text-primary-accent"
           >
             Inner Balance
           </motion.span>
@@ -67,7 +67,7 @@ const ContactForm = () => {
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true }}
-          className="mt-4 text-gray-700 text-lg leading-relaxed max-w-xl"
+          className="mt-4 text-text-muted text-lg leading-relaxed max-w-xl"
         >
           Have a feature idea, suggestion, or simply want to share your thoughts?
           <br /> We’d love to hear from you.
@@ -80,11 +80,11 @@ const ContactForm = () => {
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true }}
-        className="relative z-10 mx-auto mt-16 max-w-xl bg-white/70 backdrop-blur-xl rounded-2xl shadow-xl border border-gray-200 px-6 sm:px-10 py-10 sm:py-12"
+        className="relative z-10 mx-auto mt-16 max-w-xl bg-card-bg/75 backdrop-blur-xl rounded-2xl shadow-xl border border-gray-300 dark:border-zinc-700 px-6 sm:px-10 py-10 sm:py-12"
       >
         <div className="grid grid-cols-1 gap-x-8 gap-y-6 sm:grid-cols-2">
           <div>
-            <label htmlFor="first-name" className="block text-sm font-semibold text-gray-900">
+            <label htmlFor="first-name" className="block text-sm font-semibold text-foreground">
               First Name
             </label>
             <input
@@ -92,14 +92,12 @@ const ContactForm = () => {
               type="text"
               id="first-name"
               placeholder="Your First Name"
-              className="mt-2.5 block w-full rounded-md border-0 px-3.5 py-2 text-gray-900 shadow-sm 
-                ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-yellow-400 
-                sm:text-sm sm:leading-6 transition duration-300 hover:ring-yellow-200"
+              className="mt-2.5 block w-full rounded-md border border-gray-300 dark:border-zinc-700 bg-slate-900/5 dark:bg-white/5 px-3.5 py-2 text-foreground shadow-sm placeholder:text-gray-450 focus:ring-2 focus:ring-primary-accent focus:outline-none sm:text-sm sm:leading-6 transition duration-300 hover:ring-primary-accent/40"
             />
           </div>
 
           <div>
-            <label htmlFor="last-name" className="block text-sm font-semibold text-gray-900">
+            <label htmlFor="last-name" className="block text-sm font-semibold text-foreground">
               Last Name
             </label>
             <input
@@ -107,14 +105,12 @@ const ContactForm = () => {
               type="text"
               id="last-name"
               placeholder="Your Last Name"
-              className="mt-2.5 block w-full rounded-md border-0 px-3.5 py-2 text-gray-900 shadow-sm 
-                ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-yellow-400 
-                sm:text-sm sm:leading-6 transition duration-300 hover:ring-yellow-200"
+              className="mt-2.5 block w-full rounded-md border border-gray-300 dark:border-zinc-700 bg-slate-900/5 dark:bg-white/5 px-3.5 py-2 text-foreground shadow-sm placeholder:text-gray-450 focus:ring-2 focus:ring-primary-accent focus:outline-none sm:text-sm sm:leading-6 transition duration-300 hover:ring-primary-accent/40"
             />
           </div>
 
           <div className="sm:col-span-2">
-            <label htmlFor="company" className="block text-sm font-semibold text-gray-900">
+            <label htmlFor="company" className="block text-sm font-semibold text-foreground">
               Company
             </label>
             <input
@@ -122,14 +118,12 @@ const ContactForm = () => {
               type="text"
               id="company"
               placeholder="Your Company Name"
-              className="mt-2.5 block w-full rounded-md border-0 px-3.5 py-2 text-gray-900 shadow-sm 
-                ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-yellow-400 
-                sm:text-sm sm:leading-6 transition duration-300 hover:ring-yellow-200"
+              className="mt-2.5 block w-full rounded-md border border-gray-300 dark:border-zinc-700 bg-slate-900/5 dark:bg-white/5 px-3.5 py-2 text-foreground shadow-sm placeholder:text-gray-450 focus:ring-2 focus:ring-primary-accent focus:outline-none sm:text-sm sm:leading-6 transition duration-300 hover:ring-primary-accent/40"
             />
           </div>
 
           <div className="sm:col-span-2">
-            <label htmlFor="email" className="block text-sm font-semibold text-gray-900">
+            <label htmlFor="email" className="block text-sm font-semibold text-foreground">
               Email
             </label>
             <input
@@ -137,14 +131,12 @@ const ContactForm = () => {
               type="email"
               id="email"
               placeholder="Your Email Address"
-              className="mt-2.5 block w-full rounded-md border-0 px-3.5 py-2 text-gray-900 shadow-sm 
-                ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-yellow-400 
-                sm:text-sm sm:leading-6 transition duration-300 hover:ring-yellow-200"
+              className="mt-2.5 block w-full rounded-md border border-gray-300 dark:border-zinc-700 bg-slate-900/5 dark:bg-white/5 px-3.5 py-2 text-foreground shadow-sm placeholder:text-gray-450 focus:ring-2 focus:ring-primary-accent focus:outline-none sm:text-sm sm:leading-6 transition duration-300 hover:ring-primary-accent/40"
             />
           </div>
 
           <div className="sm:col-span-2">
-            <label htmlFor="phone" className="block text-sm font-semibold text-gray-900">
+            <label htmlFor="phone" className="block text-sm font-semibold text-foreground">
               Phone Number
             </label>
             <input
@@ -152,23 +144,19 @@ const ContactForm = () => {
               type="tel"
               id="phone"
               placeholder="Your Phone Number"
-              className="mt-2.5 block w-full rounded-md border-0 px-3.5 py-2 text-gray-900 shadow-sm 
-                ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-yellow-400 
-                sm:text-sm sm:leading-6 transition duration-300 hover:ring-yellow-200"
+              className="mt-2.5 block w-full rounded-md border border-gray-300 dark:border-zinc-700 bg-slate-900/5 dark:bg-white/5 px-3.5 py-2 text-foreground shadow-sm placeholder:text-gray-450 focus:ring-2 focus:ring-primary-accent focus:outline-none sm:text-sm sm:leading-6 transition duration-300 hover:ring-primary-accent/40"
             />
           </div>
 
           <div className="sm:col-span-2">
-            <label htmlFor="message" className="block text-sm font-semibold text-gray-900">
+            <label htmlFor="message" className="block text-sm font-semibold text-foreground">
               Message
             </label>
             <textarea
               id="message"
               rows="4"
               placeholder="Share your thoughts..."
-              className="mt-2.5 block w-full rounded-md border-0 px-3.5 py-2 text-gray-900 shadow-sm 
-                ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-yellow-400 
-                sm:text-sm sm:leading-6 transition duration-300 hover:ring-yellow-200"
+              className="mt-2.5 block w-full rounded-md border border-gray-300 dark:border-zinc-700 bg-slate-900/5 dark:bg-white/5 px-3.5 py-2 text-foreground shadow-sm placeholder:text-gray-450 focus:ring-2 focus:ring-primary-accent focus:outline-none sm:text-sm sm:leading-6 transition duration-300 hover:ring-primary-accent/40"
             ></textarea>
           </div>
         </div>
@@ -176,11 +164,11 @@ const ContactForm = () => {
         <motion.button
           whileHover={{
             scale: 1.05,
-            boxShadow: "0 0 20px rgba(250, 204, 21, 0.5)",
+            boxShadow: "0 0 20px rgba(0, 223, 129, 0.5)",
           }}
           whileTap={{ scale: 0.97 }}
           type="submit"
-          className="relative mt-10 w-full bg-gradient-to-r from-yellow-400 to-yellow-300 text-black font-semibold py-3 rounded-full shadow-md hover:shadow-lg transition-all"
+          className="relative mt-10 w-full bg-primary-accent text-slate-900 font-extrabold py-3 rounded-full shadow-md hover:shadow-lg transition-all cursor-pointer"
         >
           Submit →
         </motion.button>

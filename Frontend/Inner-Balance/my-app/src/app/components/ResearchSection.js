@@ -6,59 +6,55 @@ import { FileText, Brain, LineChart, CheckCircle2 } from "lucide-react";
 const ResearchSection = () => {
   const sections = [
     {
-      title: "Abstract",
-      icon: <FileText className="w-6 h-6 text-yellow-500" />,
+      title: "Clinical Intake Workflow (CDDS)",
+      icon: <FileText className="w-6 h-6 text-primary-accent" />,
       content: (
         <>
-          This paper presents the design and development of an{" "}
-          <b>Automated Number Plate Recognition (ANPR)</b> system for
-          automating vehicle entry and exit operations. It uses <b>YOLOv8</b>{" "}
-          for object detection and <b>EasyOCR</b> for optical character
-          recognition, providing robust performance under diverse conditions.
+          Inner Balance operates as a dedicated <b>Clinical Decision Support System (CDDS)</b>. 
+          Patients undergo a standardized pre-screening process consisting of 10 baseline MCQs, 
+          followed by 10 dynamically adaptive, LLM-generated screening questions. This structure 
+          is supervised to guarantee clinical relevance.
         </>
       ),
     },
     {
-      title: "Methodology",
-      icon: <Brain className="w-6 h-6 text-yellow-500" />,
+      title: "Preventing LLM Hallucinations",
+      icon: <Brain className="w-6 h-6 text-primary-accent" />,
       content: (
         <>
-          The system starts with live video input. Detected number plates are
-          localized using <b>YOLOv8</b>, cropped, and passed to{" "}
-          <b>EasyOCR</b> for character extraction. Data is verified and stored
-          in <b>MongoDB</b>, while a <b>Streamlit</b> dashboard allows real-time
-          monitoring.
+          Unlike generic conversational AI, our engine constrains responses within verified 
+          medical knowledge databases (using GAD-7 and PHQ-9 diagnostic criteria). This 
+          <b>Clinical Decision Support</b> database mapping prevents clinical hallucinations, 
+          ensuring intake metrics are accurate and secure.
         </>
       ),
     },
     {
-      title: "Results and Discussion",
-      icon: <LineChart className="w-6 h-6 text-yellow-500" />,
+      title: "Saving Clinician Intake Time",
+      icon: <LineChart className="w-6 h-6 text-primary-accent" />,
       content: (
         <>
-          The framework achieves an average detection accuracy of <b>96.7%</b>{" "}
-          and recognition accuracy of <b>94.3%</b>. It is resilient against
-          motion blur, angular distortion, and low-light conditions, and shows
-          a <b>15–20%</b> improvement over conventional ANPR systems.
+          Intake summaries are compiled in seconds. Doctors receive immediate structured reports 
+          outlining functional impairment metrics, warning flags (such as suicidality indicators), 
+          and validation alerts. This reduces administrative overhead and saves valuable consultation time.
         </>
       ),
     },
     {
-      title: "Conclusion and Future Work",
-      icon: <CheckCircle2 className="w-6 h-6 text-yellow-500" />,
+      title: "Secure Decision Platform",
+      icon: <CheckCircle2 className="w-6 h-6 text-primary-accent" />,
       content: (
         <>
-          The ANPR system automates vehicle identification and database
-          management with high accuracy. Future work includes deployment on{" "}
-          <b>edge devices</b> and integration with <b>IoT-based gate control</b>{" "}
-          for fully autonomous entry.
+          Patient intake records are stored securely in a relational PostgreSQL database. This allows 
+          clinicians to recall historical intakes, track treatment progression over time, and ensure 
+          compliance with data privacy standards.
         </>
       ),
     },
   ];
 
   return (
-    <section className="relative py-16 px-6 sm:px-16 text-gray-900 overflow-hidden">
+    <section className="relative py-16 px-6 sm:px-16 text-foreground bg-background transition-colors duration-300 overflow-hidden">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: 40 }}
@@ -66,23 +62,21 @@ const ResearchSection = () => {
         transition={{ duration: 0.9, ease: "easeOut" }}
         className="text-center mb-12"
       >
-        <motion.h1
+        <motion.h2
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7 }}
-          className="text-3xl sm:text-4xl font-bold text-[#000] tracking-tight"
+          className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight"
         >
-          Research on <span className="bg-yellow-300 px-1 rounded">Topic</span>
-        </motion.h1>
+          Clinical Decision <span className="bg-primary-accent/15 border border-primary-accent/20 text-primary-accent px-2 py-0.5 rounded-full inline-block">Support</span>
+        </motion.h2>
         <motion.p
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3, duration: 0.6 }}
-          className="text-gray-800 mt-4 text-sm sm:text-base max-w-3xl mx-auto leading-relaxed"
+          className="text-text-muted mt-4 text-sm sm:text-base max-w-3xl mx-auto leading-relaxed"
         >
-          IEEE-formatted study on integrating YOLOv8 and EasyOCR for real-time
-          number plate detection and recognition to improve efficiency,
-          security, and automation in vehicle management systems.
+          Guiding patient evaluations with genuine, evidence-based CDDS intelligence. Built to help doctors optimize intake diagnostic tasks safely and efficiently.
         </motion.p>
       </motion.div>
 
@@ -97,16 +91,16 @@ const ResearchSection = () => {
             viewport={{ once: true }}
             className="flex items-start gap-4"
           >
-            <div>{section.icon}</div>
+            <div className="bg-primary-accent/10 p-2 rounded-xl flex-shrink-0">{section.icon}</div>
             <div className="text-sm sm:text-base">
-              <h3 className="text-yellow-600 font-semibold mb-1">{section.title}</h3>
-              <p className="text-gray-700">{section.content}</p>
+              <h3 className="text-primary-accent font-semibold mb-1">{section.title}</h3>
+              <p className="text-text-muted">{section.content}</p>
             </div>
           </motion.div>
         ))}
       </div>
 
-      {/* Download Button */}
+      {/* Action Button */}
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         whileInView={{ opacity: 1, scale: 1 }}
@@ -115,13 +109,11 @@ const ResearchSection = () => {
         className="mt-12 text-center"
       >
         <a
-          href="/research-paper.pdf"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 bg-yellow-400 hover:bg-yellow-500 text-black font-semibold px-6 py-3 rounded-full shadow transition-transform hover:scale-105"
+          href="/features"
+          className="inline-flex items-center gap-2 bg-primary-accent hover:bg-primary-accent/90 text-slate-900 font-extrabold px-6 py-3 rounded-full shadow transition-transform hover:scale-105 cursor-pointer"
         >
           <FileText className="w-4 h-4" />
-          View Full Research Paper
+          Explore System Features
         </a>
       </motion.div>
     </section>

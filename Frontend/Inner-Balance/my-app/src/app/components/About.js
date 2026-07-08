@@ -71,10 +71,10 @@ const About = () => {
   return (
     <section
       ref={sectionRef}
-      className="relative w-full min-h-screen flex flex-col md:flex-row items-center justify-center px-4 sm:px-8 py-12 sm:py-16 lg:py-20 bg-gradient-to-br from-[#fafafa] via-[#ffffff] to-[#f6f6f6] overflow-hidden"
+      className="relative w-full min-h-screen flex flex-col md:flex-row items-center justify-center px-4 sm:px-8 py-12 sm:py-16 lg:py-20 bg-gradient-to-br from-[#fafafa] via-[#ffffff] to-[#f6f6f6] dark:from-[#030303] dark:via-[#050505] dark:to-[#030303] overflow-hidden transition-colors duration-300"
     >
       {/* Subtle Background Accent Circle */}
-      <div className="absolute w-[400px] sm:w-[500px] lg:w-[600px] h-[400px] sm:h-[500px] lg:h-[600px] rounded-full blur-3xl opacity-30 top-1/4 -left-20 sm:-left-40 bg-yellow-200"></div>
+      <div className="absolute w-[400px] sm:w-[500px] lg:w-[600px] h-[400px] sm:h-[500px] lg:h-[600px] rounded-full blur-3xl opacity-30 top-1/4 -left-20 sm:-left-40 bg-primary-accent/10 dark:bg-emerald-500/10"></div>
 
       {/* Left: Image */}
       <div
@@ -85,7 +85,7 @@ const About = () => {
           <Image
             src={aboutGif}
             alt="About Illustration"
-            className="rounded-3xl shadow-xl shadow-gray-300 border border-gray-100 w-[250px] sm:w-[320px] md:w-[380px] lg:w-[420px] transition-all duration-500 group-hover:shadow-2xl"
+            className="rounded-3xl shadow-xl shadow-gray-300 dark:shadow-none border border-gray-100 dark:border-white/5 w-[250px] sm:w-[320px] md:w-[380px] lg:w-[420px] transition-all duration-500 group-hover:shadow-2xl"
           />
           <div className="absolute inset-0 rounded-3xl bg-gradient-to-tr from-transparent via-transparent opacity-30 pointer-events-none"></div>
         </div>
@@ -96,25 +96,25 @@ const About = () => {
         ref={textRef}
         className="flex-1 text-center md:text-left z-10 max-w-lg mx-auto md:mx-0 px-4"
       >
-        <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-[#1b1b1b] leading-tight tracking-tight">
+        <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-foreground leading-tight tracking-tight">
           Adaptive AI Assessment <br />
-          <span className="text-[#47634e]">Framework</span>{" "}
-          <span className="bg-yellow-300 px-2 sm:px-3 py-1 rounded-lg text-[#1b1b1b] text-xl sm:text-2xl align-middle">
+          <span className="text-primary-accent">Framework</span>{" "}
+          <span className="bg-primary-accent/10 text-primary-accent border border-primary-accent/20 px-3 py-1 rounded-full text-xl sm:text-2xl align-middle inline-block">
             (FAQs)
           </span>
         </h2>
 
-        <p className="text-gray-600 mt-4 sm:mt-6 max-w-md mx-auto md:mx-0 text-sm sm:text-base lg:text-lg leading-relaxed">
-          Inner Balance introduces a two-stage adaptive assessment protocol supported by a 
-          RAG-enhanced clinical reasoning engine. Our system ensures safe, context-aware, and 
+        <p className="text-text-muted mt-4 sm:mt-6 max-w-md mx-auto md:mx-0 text-sm sm:text-base lg:text-lg leading-relaxed">
+          Inner Balance introduces a two-stage adaptive assessment protocol supported by an 
+          evidence-grounded clinical reasoning engine. Our system ensures safe, context-aware, and 
           evidence-based questioning grounded in medical knowledge.
         </p>
 
         {/* Decorative Line + CTA */}
-        <div className="h-[3px] bg-yellow-400 mt-4 sm:mt-6 mb-4 sm:mb-6 rounded-full w-24 sm:w-32 mx-auto md:mx-0"></div>
+        <div className="h-[3px] bg-primary-accent mt-4 sm:mt-6 mb-4 sm:mb-6 rounded-full w-24 sm:w-32 mx-auto md:mx-0"></div>
 
         <Link href="/about">
-          <button className="bg-[#47634e] text-white px-5 sm:px-6 py-2.5 sm:py-3 rounded-2xl font-medium shadow-md hover:shadow-xl transition-all duration-300 transform hover:scale-105 active:scale-95 text-sm sm:text-base">
+          <button className="bg-primary-accent hover:bg-primary-accent/90 text-white px-5 sm:px-6 py-2.5 sm:py-3 rounded-2xl font-medium shadow-md hover:shadow-xl transition-all duration-300 transform hover:scale-105 active:scale-95 text-sm sm:text-base cursor-pointer">
             Learn More
           </button>
         </Link>

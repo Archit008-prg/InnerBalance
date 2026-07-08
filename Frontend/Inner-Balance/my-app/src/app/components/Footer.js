@@ -147,10 +147,10 @@ const Footer = () => {
   return (
     <footer
       ref={footerRef}
-      className="bg-white text-black flex flex-col items-center relative overflow-hidden pt-8 sm:pt-12"
+      className="bg-white dark:bg-[#030303] text-black dark:text-white flex flex-col items-center relative overflow-hidden pt-8 sm:pt-12 transition-colors duration-300"
     >
       {/* Top black line */}
-      <div className="w-full h-[0.5px] bg-black" />
+      <div className="w-full h-[0.5px] bg-black dark:bg-white/10" />
 
       {/* Logo */}
       <div ref={logoRef} className="mt-6 sm:mt-8">
@@ -159,7 +159,7 @@ const Footer = () => {
           alt="Logo"
           width={140}
           height={80}
-          className="object-contain w-24 sm:w-32 md:w-36"
+          className="object-contain w-24 sm:w-32 md:w-36 dark:brightness-110"
         />
       </div>
 
@@ -168,9 +168,9 @@ const Footer = () => {
         <p className="text-base sm:text-lg font-medium">
           Enter your email address to consult a doctor
         </p>
-        <p className="text-sm sm:text-base text-gray-700 leading-relaxed">
+        <p className="text-sm sm:text-base text-gray-700 dark:text-slate-355 leading-relaxed">
           Get Started on your journey to a <br className="hidden sm:block" />
-          <span className="font-semibold">healthier & happier life.</span>
+          <span className="font-semibold text-primary-accent">healthier & happier life.</span>
         </p>
       </div>
 
@@ -182,10 +182,10 @@ const Footer = () => {
         <input
           type="email"
           placeholder="Enter your email"
-          className="px-4 sm:px-5 py-2.5 sm:py-3 w-full sm:w-72 md:w-80 rounded-full border-2 border-gray-300 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 transition-all text-sm sm:text-base"
+          className="px-4 sm:px-5 py-2.5 sm:py-3 w-full sm:w-72 md:w-80 rounded-full border-2 border-gray-300 dark:border-white/10 dark:bg-white/5 focus:outline-none focus:ring-2 focus:ring-primary-accent focus:border-primary-accent transition-all text-sm sm:text-base text-slate-700 dark:text-slate-200"
         />
         <button
-          className="bg-yellow-400 hover:bg-yellow-500 text-black font-semibold px-5 sm:px-6 py-2.5 sm:py-3 rounded-full shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105 active:scale-95 text-sm sm:text-base w-full sm:w-auto"
+          className="bg-primary-accent hover:bg-primary-accent/90 text-white font-bold px-6 py-2.5 sm:py-3 rounded-full shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105 active:scale-95 text-sm sm:text-base w-full sm:w-auto cursor-pointer"
         >
           Get App
         </button>
@@ -208,7 +208,7 @@ const Footer = () => {
           <a
             key={index}
             href="#"
-            className="hover:text-yellow-500 transition-colors duration-300"
+            className="hover:text-primary-accent transition-colors duration-300"
           >
             {item}
           </a>
@@ -222,26 +222,26 @@ const Footer = () => {
       >
         <a
           href="#"
-          className="hover:text-yellow-500 transition-colors transform hover:scale-110"
+          className="hover:text-primary-accent transition-colors transform hover:scale-110"
         >
           <Instagram size={20} className="sm:w-6 sm:h-6" />
         </a>
         <a
           href="mailto:someone@example.com"
-          className="hover:text-yellow-500 transition-colors transform hover:scale-110"
+          className="hover:text-primary-accent transition-colors transform hover:scale-110"
         >
           <Mail size={20} className="sm:w-6 sm:h-6" />
         </a>
         <a
           href="#"
-          className="hover:text-yellow-500 transition-colors transform hover:scale-110"
+          className="hover:text-primary-accent transition-colors transform hover:scale-110"
         >
           <Youtube size={20} className="sm:w-6 sm:h-6" />
         </a>
       </div>
 
       {/* Bottom yellow line with leaf sitting ON it */}
-      <div className="relative w-full h-[3px] bg-yellow-400">
+      <div className="relative w-full h-[3px] bg-primary-accent">
         <div
           ref={leaf1Ref}
           className="absolute left-2 sm:left-4 bottom-[2px] hidden sm:block"
@@ -251,7 +251,7 @@ const Footer = () => {
             alt="Leaf Illustration"
             width={100}
             height={100}
-            className="object-contain animate-bounce-slow"
+            className="object-contain animate-bounce-slow dark:invert dark:opacity-85"
             unoptimized
           />
         </div>
@@ -264,7 +264,7 @@ const Footer = () => {
             alt="Leaf Illustration"
             width={100}
             height={100}
-            className="object-contain animate-bounce-slow"
+            className="object-contain animate-bounce-slow dark:invert dark:opacity-85"
             unoptimized
           />
         </div>

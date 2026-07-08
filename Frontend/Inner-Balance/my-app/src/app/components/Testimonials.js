@@ -18,7 +18,7 @@ const testimonials = [
     color: "#4BB04F",
   },
   {
-    text: "As someone who struggled with traditional static assessments, Inner Balance's RAG-powered system provided personalized insights that felt truly tailored. The two-stage approach made the process feel less overwhelming.",
+    text: "As someone who struggled with traditional static assessments, Inner Balance's evidence-grounded system provided personalized insights that felt truly tailored. The two-stage approach made the process feel less overwhelming.",
     name: "Michael Chen",
     role: "Mental Health Patient",
     img: "https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&h=750&w=1260",
@@ -66,7 +66,7 @@ const TestimonialCard = ({ t }) => {
   return (
     <div
       ref={cardRef}
-      className="min-w-[280px] sm:min-w-[320px] max-w-[350px] bg-white rounded-2xl shadow-lg p-5 sm:p-6 flex flex-col justify-between mx-3 sm:mx-4 transition-transform duration-300 hover:scale-105 hover:shadow-xl"
+      className="min-w-[280px] sm:min-w-[320px] max-w-[350px] bg-card-bg border border-card-border rounded-2xl shadow-sm p-5 sm:p-6 flex flex-col justify-between mx-3 sm:mx-4 transition-all duration-300 hover:scale-105 hover:shadow-md"
     >
       {/* Quote icon */}
       <div className="text-4xl mb-4" style={{ color: t.color }}>
@@ -74,7 +74,7 @@ const TestimonialCard = ({ t }) => {
       </div>
 
       {/* Testimonial text */}
-      <p className="text-gray-600 text-xs sm:text-sm leading-relaxed mb-6 break-words whitespace-normal flex-grow">
+      <p className="text-text-muted text-xs sm:text-sm leading-relaxed mb-6 break-words whitespace-normal flex-grow">
         {t.text}
       </p>
 
@@ -88,10 +88,10 @@ const TestimonialCard = ({ t }) => {
           className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover flex-shrink-0"
         />
         <div>
-          <p className="text-sm sm:text-base font-semibold text-[#120B06]">
+          <p className="text-sm sm:text-base font-semibold text-foreground">
             {t.name}
           </p>
-          <p className="text-xs sm:text-sm text-gray-500">{t.role}</p>
+          <p className="text-xs sm:text-sm text-text-muted/80">{t.role}</p>
         </div>
       </div>
     </div>
@@ -145,23 +145,23 @@ const Testimonials = () => {
     <section
       ref={sectionRef}
       id="testimonials"
-      className="font-[Rubik] bg-[#F9FFF9] text-[#120B06] px-4 sm:px-6 py-12 sm:py-16 lg:py-20 overflow-hidden"
+      className="font-[Rubik] bg-transparent text-foreground px-4 sm:px-6 py-12 sm:py-16 lg:py-20 overflow-hidden transition-colors duration-300"
     >
       {/* Heading */}
       <h2
         ref={headingRef}
-        className="text-3xl sm:text-4xl md:text-5xl font-bold text-center mb-4 sm:mb-6 px-4"
+        className="text-3xl sm:text-4xl md:text-5xl font-bold text-center mb-4 sm:mb-6 px-4 text-foreground"
       >
         What Our Users{" "}
-        <span className="bg-yellow-300 px-2 py-1 rounded-md">Say</span>
+        <span className="bg-primary-accent/10 text-primary-accent border border-primary-accent/20 px-3 py-1 rounded-full text-xl sm:text-2xl align-middle inline-block">Say</span>
       </h2>
 
       <p
         ref={subtitleRef}
-        className="max-w-2xl mx-auto text-center text-gray-600 mb-12 sm:mb-16 text-sm sm:text-base lg:text-lg leading-relaxed px-4"
+        className="max-w-2xl mx-auto text-center text-text-muted mb-12 sm:mb-16 text-sm sm:text-base lg:text-lg leading-relaxed px-4"
       >
         Real feedback from patients and healthcare professionals who have experienced the 
-        transformative power of our RAG-enhanced adaptive assessment system.
+        transformative power of our clinical-guideline guided adaptive assessment system.
       </p>
 
       {/* Row 1 → left to right */}

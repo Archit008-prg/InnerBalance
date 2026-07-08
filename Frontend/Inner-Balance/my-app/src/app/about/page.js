@@ -7,7 +7,7 @@ import Footer from "../components/Footer";
 
 const Page = () => {
   return (
-    <main className="bg-white text-black min-h-screen flex flex-col">
+    <main className="bg-background text-foreground min-h-screen flex flex-col pt-20">
       {/* Navbar */}
       <Navbar />
 

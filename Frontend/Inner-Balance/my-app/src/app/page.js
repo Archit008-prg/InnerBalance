@@ -6,11 +6,12 @@ import Hero from "./components/Hero";
 import Testimonials from "./components/Testimonials";
 import About from "./components/About";
 import Faq from "./components/Faq";
+import CallToAction from "./components/CallToAction";
 import Footer from "./components/Footer";
 
 const Page = () => {
   return (
-    <main className="bg-white text-black min-h-screen flex flex-col">
+    <main className="bg-background text-foreground min-h-screen flex flex-col pt-0">
       {/* Navbar */}
       <Navbar />
 
@@ -36,6 +37,11 @@ const Page = () => {
          {/* FAQ Section */}
       <div className="flex-grow">
         <Faq />
+      </div>
+
+      {/* Call To Action Banner */}
+      <div className="flex-grow">
+        <CallToAction />
       </div>
 
       {/* Footer */}
