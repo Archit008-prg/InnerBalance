@@ -1,0 +1,21 @@
+NICE CLINICAL GUIDELINES FOR DEPRESSION IN ADULTS (CG90 / NG222)
+==============================================================
+
+Overview of Classification & Identification:
+NICE guidelines classify depression severity based on the number of symptoms present and the degree of functional impairment:
+1. Subthreshold depressive symptoms: Fewer than 5 symptoms.
+2. Mild depression: 5 symptoms and minor functional impairment.
+3. Moderate depression: 5 or more symptoms and variable functional impairment (e.g. difficulty in social/work situations).
+4. Severe depression: Most symptoms present, and marked functional impairment (e.g. inability to perform daily activities, or high suicide risk).
+
+Stepwise Treatment Recommendations:
+- Step 1: Assessment, detection, and active monitoring for mild/subthreshold cases.
+- Step 2: Low-intensity psychosocial interventions (guided self-help, group cognitive behavioral therapy (CBT), digital CBT) for persistent subthreshold or mild-to-moderate depression.
+- Step 3: High-intensity psychosocial interventions (individual CBT, interpersonal therapy (IPT)) or pharmacological treatments (selective serotonin reuptake inhibitors (SSRIs)) for moderate-to-severe depression.
+- Step 4: Multi-professional care, inpatient assessment, and electroconvulsive therapy (ECT) in severe, treatment-resistant, or life-threatening depression.
+
+Clinical Assessment Guidance:
+- Always screen for suicidal ideation, self-harm intentions, and safety risks.
+- Look for vegetative symptoms: sleep architecture disruptions, significant change in appetite or weight, psychomotor agitation or retardation.
+- Evaluate functional impairment: impact on relationships, employment, and daily living.
+- Differentiate from bipolar disorder, adjustment disorder, bereavement, or secondary mood disturbances due to underlying medical conditions (e.g., hypothyroidism).

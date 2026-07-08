@@ -1,6 +1,8 @@
 import os
+os.environ["HF_HOME"] = "F:\\huggingface"
 import json
 import torch
+import random
 from typing import List, Dict, Any
 from langchain_core.documents import Document
 from langchain_community.vectorstores import Chroma
@@ -24,9 +26,21 @@ class MeditronRAGSystem:
         # Initialize components
         self.setup_embeddings()
         self.setup_vector_store()
-        self.setup_meditron_llm()
         self.setup_prompts()
         
+    @property
+    def llm(self):
+        """Lazy-loaded LLM pipeline"""
+        if not hasattr(self, '_llm_loaded'):
+            self._llm_loaded = True
+            self._llm = None
+            self.setup_meditron_llm()
+        return self._llm
+
+    @llm.setter
+    def llm(self, value):
+        self._llm = value
+
     def setup_embeddings(self):
         """Setup sentence embeddings for vector store"""
         self.embeddings = HuggingFaceEmbeddings(
@@ -49,23 +63,97 @@ class MeditronRAGSystem:
             )
             self.load_knowledge_base()
             print("Created new vector store")
+            
+    def rebuild_vector_store(self):
+        """Reset the vector store collection and reload all knowledge base documents"""
+        try:
+            # Delete all documents in the Chroma collection
+            results = self.vector_store._collection.get()
+            if results and results.get('ids'):
+                self.vector_store._collection.delete(ids=results['ids'])
+            print("[VECTOR STORE] Cleared all existing documents from ChromaDB")
+        except Exception as e:
+            print(f"[VECTOR STORE WARNING] Failed to clear collection via API: {e}")
+            
+        self.load_knowledge_base()
+        print("[VECTOR STORE] Successfully rebuilt and re-embedded knowledge base documents")
     
     def setup_meditron_llm(self):
-        """Setup a reliable medical LLM - using stable models"""
+        """Setup a reliable medical LLM - using stable models or Serverless API"""
         try:
             # Primary: Microsoft Phi-3 Mini (stable, good context)
             model_name = "microsoft/Phi-3-mini-4k-instruct"
             
-            print(f"🔄 Loading model: {model_name}")
+            # Check if Hugging Face API token is provided in .env
+            from decouple import config
+            hf_token = config("HF_TOKEN", default=None)
+            
+            if hf_token:
+                print(f"[LLM] Using Hugging Face Serverless Inference API for {model_name}")
+                class HuggingFaceServerlessLLM:
+                    def __init__(self, model_id, token):
+                        self.model_id = model_id
+                        self.token = token
+                    
+                    def invoke(self, prompt, *args, **kwargs):
+                        prompt_str = str(prompt)
+                        if hasattr(prompt, 'to_string'):
+                            prompt_str = prompt.to_string()
+                        
+                        import requests
+                        api_url = f"https://api-inference.huggingface.co/models/{self.model_id}"
+                        headers = {"Authorization": f"Bearer {self.token}"}
+                        payload = {
+                            "inputs": prompt_str,
+                            "parameters": {
+                                "max_new_tokens": 512,
+                                "temperature": 0.7,
+                                "top_p": 0.9,
+                                "do_sample": True,
+                                "return_full_text": False
+                            }
+                        }
+                        
+                        # Retries for model startup (loading state)
+                        for attempt in range(5):
+                            response = requests.post(api_url, headers=headers, json=payload, timeout=30)
+                            if response.status_code == 200:
+                                res_json = response.json()
+                                if isinstance(res_json, list) and len(res_json) > 0:
+                                    return res_json[0].get("generated_text", "")
+                                elif isinstance(res_json, dict):
+                                    return res_json.get("generated_text", "")
+                            elif response.status_code == 503:
+                                print(f"[LLM WARNING] HF Serverless model is loading. Retrying in 5 seconds (attempt {attempt + 1}/5)...")
+                                import time
+                                time.sleep(5)
+                            else:
+                                raise Exception(f"HF API returned status {response.status_code}: {response.text}")
+                        raise Exception("HF API model failed to load within timeout limits.")
+                        
+                    def __call__(self, prompt, stop=None, **kwargs):
+                        return self.invoke(prompt)
+
+                self.llm = HuggingFaceServerlessLLM(model_name, hf_token)
+                print("[LLM] Hugging Face Serverless Inference API client initialized successfully")
+                return
+            
+            print(f"[LLM] Loading model locally: {model_name}")
             
             # Load tokenizer and model
             self.tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
-            self.model = AutoModelForCausalLM.from_pretrained(
-                model_name,
-                torch_dtype=torch.float16,
-                device_map="auto",
-                trust_remote_code=True
-            )
+            
+            device = "cuda" if torch.cuda.is_available() else "cpu"
+            model_kwargs = {
+                "trust_remote_code": True
+            }
+            if device == "cuda":
+                model_kwargs["torch_dtype"] = torch.float16
+                model_kwargs["device_map"] = "auto"
+            else:
+                model_kwargs["torch_dtype"] = torch.float32
+                
+            self.model = AutoModelForCausalLM.from_pretrained(model_name, **model_kwargs)
             
             # Create text generation pipeline
             self.pipe = pipeline(
@@ -83,12 +171,12 @@ class MeditronRAGSystem:
             # Wrap in LangChain
             self.llm = HuggingFacePipeline(pipeline=self.pipe)
             
-            print(f"✅ {model_name} loaded successfully")
-            print("🎯 Model features: 4K context, 3.8B parameters, instruction-tuned")
+            print(f"[LLM] {model_name} loaded successfully")
+            print("[LLM] Model features: 4K context, 3.8B parameters, instruction-tuned")
         
         except Exception as e:
-            print(f"❌ Failed to load primary model: {e}")
-            print("🔄 Trying fallback model...")
+            print(f"[LLM ERROR] Failed to load primary model: {e}")
+            print("[LLM] Trying fallback model...")
             self.setup_fallback_llm()
     
     def setup_fallback_llm(self):
@@ -97,7 +185,7 @@ class MeditronRAGSystem:
             # Ultra-stable fallback
             model_name = "distilgpt2"
             
-            print(f"🔄 Loading fallback model: {model_name}")
+            print(f"[LLM] Loading fallback model: {model_name}")
             
             self.tokenizer = AutoTokenizer.from_pretrained(model_name)
             self.model = AutoModelForCausalLM.from_pretrained(model_name)
@@ -114,11 +202,11 @@ class MeditronRAGSystem:
             )
             
             self.llm = HuggingFacePipeline(pipeline=self.pipe)
-            print(f"✅ {model_name} loaded successfully (fallback mode)")
+            print(f"[LLM] {model_name} loaded successfully (fallback mode)")
             
         except Exception as e:
-            print(f"❌ All models failed: {e}")
-            print("🔄 Proceeding without LLM - using rule-based system")
+            print(f"[LLM ERROR] All models failed: {e}")
+            print("[LLM] Proceeding without LLM - using rule-based system")
             self.llm = None
     
     def setup_prompts(self):
@@ -126,8 +214,9 @@ class MeditronRAGSystem:
         
         # Enhanced prompt for generating follow-up questions
         self.follow_up_prompt = PromptTemplate(
-            input_variables=["analysis", "context"],
-            template="""As a clinical psychologist, generate exactly 5 personalized follow-up questions based on this patient's specific symptoms:
+            input_variables=["analysis", "context", "primary_concerns"],
+            template="""As a clinical psychologist, generate exactly 2 personalized follow-up questions based on this patient's specific symptoms.
+CRITICAL CONSTRAINT: You must avoid addressing, validating, or engaging with the emotional details/feelings of the user. Maintain a strictly objective, factual, and symptom-focused clinical inquiry. Avoid therapeutic validation of emotions; instead, focus on collecting objective data such as frequency, duration, physical/somatic symptoms, specific triggers, and daily functional impact.
 
 PATIENT ASSESSMENT:
 {analysis}
@@ -137,22 +226,24 @@ CLINICAL GUIDANCE:
 
 Create questions that are:
 1. HIGHLY SPECIFIC to their symptom severity and patterns
-2. EMPATHETIC and supportive in tone  
-3. OPEN-ENDED to encourage detailed sharing
+2. Objective, factual, and clinically focused
+3. Probing for specific details on frequency, duration, triggers, or somatic impact
 4. CLINICALLY RELEVANT based on their primary concerns
-5. PERSONALIZED to their unique experience
 
 Focus on understanding their specific struggles with {primary_concerns}.
 
-Return ONLY a JSON array of exactly 5 questions. No explanations.
+Return ONLY a JSON array of exactly 2 questions. No explanations.
 
-["question1", "question2", "question3", "question4", "question5"]"""
+["question1", "question2"]"""
         )
 
         # Simplified report prompt
         self.report_prompt = PromptTemplate(
             input_variables=["initial_answers", "follow_up_answers", "clinical_context"],
-            template="""As a psychiatrist, create a brief clinical report:
+            template="""As a psychiatrist, write a brief clinical report.
+You must refer specifically to the patient's text answers under FOLLOW-UP RESPONSES.
+If the patient's responses are vague, repetitive, or low-effort, explicitly note this under response_validity.
+For every recommendation, mention the specific symptom or answer that triggered it.
 
 ASSESSMENT DATA:
 {initial_answers}
@@ -163,12 +254,16 @@ FOLLOW-UP RESPONSES:
 GUIDELINES:
 {clinical_context}
 
-Generate concise JSON report with:
-- risk_level (low/moderate/high)
-- primary_concerns (list)
-- symptom_severity (object)
-- key_recommendations (3-4 items)
-- crisis_indicators (list)
+Generate a JSON report with:
+- risk_level: (low/moderate/high)
+- diagnostic_considerations: list of potential conditions
+- symptom_severity: object mapping depression, anxiety, sleep, and overall
+- clinical_insights: list explaining the reasons for diagnostic concerns, referencing the patient's specific inputs and context.
+- functional_impact: string describing the impact on daily activities
+- recommendations: list of actionable recommendations for the clinician, including WHY each is recommended based on the patient's data.
+- crisis_indicators: list of acute warnings or response validation alerts.
+- chief_complaint: a single concise sentence summarizing the core reason/primary underlying concern extracted from the patient's follow-up written answers.
+- response_validity: object containing 'is_valid' (boolean, set to false ONLY if the patient typed complete non-compliant gibberish like 'asdf', 'blahh', or totally irrelevant off-topic text) and 'reason' (string explaining the decision).
 
 JSON only:"""
         )
@@ -231,39 +326,46 @@ JSON only:"""
             split_docs = text_splitter.split_documents(documents)
             self.vector_store.add_documents(split_docs)
             self.vector_store.persist()
-            print(f"✅ Loaded {len(split_docs)} document chunks into vector store")
+            print(f"[VECTOR STORE] Loaded {len(split_docs)} document chunks into vector store")
         else:
-            print("⚠️ No documents found in knowledge base")
+            print("[VECTOR STORE WARNING] No documents found in knowledge base")
     
-    def analyze_initial_answers(self, answers: Dict[int, int]) -> Dict[str, Any]:
-        """Analyze first 10 answers using clinical scoring"""
-        # PHQ-9 based scoring (questions 0-8)
-        depression_score = sum(answers.get(i, 0) for i in range(9))
+    def analyze_initial_answers(self, answers: Dict[int, Any]) -> Dict[str, Any]:
+        """Analyze first 18 answers using clinical scoring"""
+        # Depression scoring based on questions 1, 2, 3, 4, 5, 11, 12, 13 (PHQ-8)
+        depression_score = sum(int(answers.get(o, 0)) for o in [1, 2, 3, 4, 5, 11, 12, 13])
         
-        # GAD-7 based scoring (questions 4-6 for anxiety core items)
-        anxiety_score = sum(answers.get(i, 0) for i in [4, 5, 6])
+        # Anxiety scoring based on questions 6, 7, 8, 9, 10, 14, 15 (GAD-7)
+        anxiety_score = sum(int(answers.get(o, 0)) for o in [6, 7, 8, 9, 10, 14, 15])
         
-        # Sleep disturbance
-        sleep_score = answers.get(2, 0)
+        # Sleep disturbance (question 3)
+        sleep_score = int(answers.get(3, 0))
         
-        # Suicide risk (question 8)
-        suicide_risk = answers.get(8, 0)
+        # Sliders (1.0 to 5.0 intensity)
+        anxiety_intensity = float(answers.get(16, 1.0))
+        depression_intensity = float(answers.get(17, 1.0))
+        
+        # Functioning difficulty (question 18)
+        functioning_score = int(answers.get(18, 0))
         
         analysis = {
-            "depression_severity": self._score_phq9(depression_score),
-            "anxiety_severity": self._score_gad7(anxiety_score),
+            "depression_severity": self._score_phq9(depression_score * 1.125), # scale up to 27 max for normal PHQ-9 alignment
+            "anxiety_severity": self._score_gad7(anxiety_score), # GAD-7 alignment (max 21)
             "sleep_disturbance": "significant" if sleep_score >= 2 else "moderate" if sleep_score == 1 else "minimal",
-            "suicide_risk": "high" if suicide_risk >= 2 else "moderate" if suicide_risk == 1 else "low",
+            "suicide_risk": "low", # Suicide risk is now handled via adaptive text assessment
+            "anxiety_intensity": anxiety_intensity,
+            "depression_intensity": depression_intensity,
+            "functioning_difficulty": self._score_functioning(functioning_score),
             "primary_concerns": [],
             "follow_up_focus": []
         }
         
         # Determine primary concerns
-        if depression_score >= 10:
+        if depression_score >= 8 or depression_intensity >= 3.0:
             analysis["primary_concerns"].append("depression")
             analysis["follow_up_focus"].extend(["mood_patterns", "anhedonia", "cognitive_symptoms"])
         
-        if anxiety_score >= 8:
+        if anxiety_score >= 7 or anxiety_intensity >= 3.0:
             analysis["primary_concerns"].append("anxiety") 
             analysis["follow_up_focus"].extend(["worry_patterns", "physical_symptoms", "avoidance"])
         
@@ -278,33 +380,47 @@ JSON only:"""
         
         return analysis
     
-    def _score_phq9(self, score: int) -> str:
+    def _score_phq9(self, score: float) -> str:
         if score >= 20: return "severe"
         elif score >= 15: return "moderately_severe" 
         elif score >= 10: return "moderate"
         elif score >= 5: return "mild"
         else: return "minimal"
     
-    def _score_gad7(self, score: int) -> str:
+    def _score_gad7(self, score: float) -> str:
         if score >= 15: return "severe"
         elif score >= 10: return "moderate"
         elif score >= 5: return "mild"
         else: return "minimal"
+
+    def _score_functioning(self, score: int) -> str:
+        if score >= 3: return "extremely difficult"
+        elif score == 2: return "very difficult"
+        elif score == 1: return "somewhat difficult"
+        else: return "not difficult at all"
     
-    def retrieve_clinical_context(self, analysis: Dict[str, Any]) -> str:
+    def retrieve_clinical_context(self, analysis: Dict[str, Any]) -> tuple:
         """Retrieve relevant clinical context based on analysis"""
         query_terms = analysis["primary_concerns"] + analysis["follow_up_focus"]
         query = " ".join(query_terms)
         
-        # Retrieve most relevant documents (limit to 2 to reduce token usage)
-        docs = self.vector_store.similarity_search(query, k=2)
+        # Retrieve most relevant documents (k=4 for richer context)
+        docs = self.vector_store.similarity_search(query, k=4)
         
         context = "CLINICAL CONTEXT:\n"
+        referred_sources = []
         for i, doc in enumerate(docs):
-            context += f"\n--- {doc.metadata.get('type', 'guideline').upper()} ---\n"
-            context += doc.page_content[:500] + "\n"  # Shorter content
+            source_name = doc.metadata.get('source', 'Clinical Guideline')
+            # Clean name for readable display (e.g. clinical_guidelines/nice_depression.txt -> Nice Depression)
+            display_name = source_name.split("/")[-1].replace(".txt", "").replace(".json", "").replace("_", " ").title()
+            
+            if display_name not in referred_sources:
+                referred_sources.append(display_name)
+                
+            context += f"\n--- {display_name.upper()} ---\n"
+            context += doc.page_content[:1200] + "\n"  # Shorter content
         
-        return context
+        return context, referred_sources
     
     def generate_follow_up_questions(self, analysis: Dict[str, Any]) -> List[str]:
         """Generate personalized follow-up questions using LLM"""
@@ -313,35 +429,46 @@ JSON only:"""
         
         try:
             # Retrieve relevant clinical context
-            context = self.retrieve_clinical_context(analysis)
+            context, _ = self.retrieve_clinical_context(analysis)
             
             # Generate questions using LLM with shorter context
             chain = self.follow_up_prompt | self.llm
             response = chain.invoke({
                 "analysis": json.dumps(analysis, indent=2),
-                "context": context[:1500],  # Limit context length
+                "context": context[:4000],  # Limit context length to 4K chars
                 "primary_concerns": ", ".join(analysis["primary_concerns"])
             })
             
             # Parse JSON response
             questions_text = response.strip()
+            questions = []
             if questions_text.startswith('[') and questions_text.endswith(']'):
-                questions = json.loads(questions_text)
-                if len(questions) == 5:
-                    print("🎯 LLM-generated personalized questions")
-                    return questions
+                try:
+                    questions = json.loads(questions_text)
+                except Exception:
+                    pass
             
             # If parsing fails, extract questions from text
-            questions = self._extract_questions_from_text(questions_text)
-            if len(questions) >= 3:
-                return questions[:5]
+            if not isinstance(questions, list) or not questions:
+                questions = self._extract_questions_from_text(questions_text)
+            
+            # Filter and sanitize questions
+            questions = [str(q).strip() for q in questions if q and len(str(q).strip()) > 10]
+            
+            # Ensure we have exactly 2 questions
+            if len(questions) < 2:
+                questions = self._pad_questions(questions, analysis, 2)
+            else:
+                questions = questions[:2]
+            print(f"[LLM] LLM-generated personalized questions (count: {len(questions)})")
+            return questions
                 
         except Exception as e:
-            print(f"❌ Error generating questions with LLM: {e}")
+            print(f"[LLM ERROR] Error generating questions with LLM: {e}")
         
         # Final fallback
-        print("🔄 Using enhanced fallback questions")
-        return self._get_enhanced_fallback_questions(analysis)
+        print("[LLM] Using enhanced fallback questions")
+        return self._get_enhanced_fallback_questions(analysis)[:2]
     
     def _extract_questions_from_text(self, text: str) -> List[str]:
         """Extract questions from LLM response text"""
@@ -359,7 +486,15 @@ JSON only:"""
                 if len(question) > 15:  # Reasonable question length
                     questions.append(question)
         
-        return questions[:5]
+        return questions
+        
+    def _pad_questions(self, questions: List[str], analysis: Dict[str, Any], target_count: int) -> List[str]:
+        """Pad the question list with high-quality fallback questions to reach target_count"""
+        fallback_pool = self._get_enhanced_fallback_questions(analysis)
+        for q in fallback_pool:
+            if q not in questions and len(questions) < target_count:
+                questions.append(q)
+        return questions
     
     def _get_enhanced_fallback_questions(self, analysis: Dict[str, Any]) -> List[str]:
         """Provide more personalized fallback questions"""
@@ -369,7 +504,12 @@ JSON only:"""
             "What does a 'better day' look like for you right now, even if it feels far away?",
             "How has this affected your sense of who you are?",
             "What keeps you going when everything feels overwhelming?",
-            "If your pain could speak, what would it want me to understand?"
+            "If your pain could speak, what would it want me to understand?",
+            "How do these low feelings impact your self-esteem and confidence?",
+            "Do you find yourself withdrawing from activities that used to bring you joy?",
+            "Have you noticed changes in your concentration or ability to make decisions?",
+            "How does this current depressive state affect your energy levels throughout the day?",
+            "What kind of support from family or friends has felt most helpful during this time?"
         ]
         
         moderate_depression_questions = [
@@ -377,7 +517,12 @@ JSON only:"""
             "What moments, if any, bring you even temporary relief from the heavy feelings?",
             "How has this affected your relationships with people you care about?",
             "What would you most want to change about how you're feeling right now?",
-            "When you look ahead, what feels most uncertain or concerning to you?"
+            "When you look ahead, what feels most uncertain or concerning to you?",
+            "How do these mood swings affect your focus at work or daily responsibilities?",
+            "Do you find your appetite or eating habits have shifted significantly?",
+            "What coping mechanisms have you tried recently, and did they make any difference?",
+            "How do you feel in the mornings compared to the evenings?",
+            "If you could talk to someone about one specific concern right now, what would it be?"
         ]
         
         anxiety_focused_questions = [
@@ -385,7 +530,12 @@ JSON only:"""
             "Are there specific thoughts that tend to trigger the anxious feelings?",
             "What situations have you started avoiding because of how they make you feel?",
             "How does anxiety affect your sleep and morning routine?",
-            "What have you found that provides even brief moments of calm?"
+            "What have you found that provides even brief moments of calm?",
+            "Do you experience sudden moments of panic or heart racing for no clear reason?",
+            "How does anxiety affect your communication with others?",
+            "Do you feel a constant sense of restlessness or being on edge?",
+            "How do you try to calm your racing thoughts when they feel out of control?",
+            "How has anxiety impacted your decision-making or daily plans?"
         ]
         
         sleep_focused_questions = [
@@ -393,157 +543,307 @@ JSON only:"""
             "How do you feel when you wake up - rested or something else?",
             "What happens in the hours before bed that might affect your sleep?",
             "How does poor sleep impact the following day for you?",
-            "What have you tried that has helped even a little with sleep?"
+            "What have you tried that has helped even a little with sleep?",
+            "Do you find yourself waking up in the middle of the night and struggling to return to sleep?",
+            "How long has this current pattern of sleep disruption been going on?",
+            "How does lack of sleep affect your emotional resilience during the day?",
+            "What is the ideal sleep environment for you, and how does it compare to your current setup?",
+            "Do thoughts about sleep itself cause you stress or anxiety?"
         ]
         
-        # Select questions based on analysis
+        # Select questions based on analysis with randomization to ensure variety
         questions = []
         
-        # Depression severity-based selection
-        if analysis["depression_severity"] in ["severe", "moderately_severe"]:
-            questions.extend(severe_depression_questions[:2])
-        elif analysis["depression_severity"] == "moderate":
-            questions.extend(moderate_depression_questions[:2])
-        
-        # Add anxiety questions if relevant
-        if analysis["anxiety_severity"] in ["moderate", "severe"] and len(questions) < 4:
-            questions.extend(anxiety_focused_questions[:1])
-        
-        # Add sleep questions if relevant
-        if analysis["sleep_disturbance"] in ["moderate", "significant"] and len(questions) < 4:
-            questions.extend(sleep_focused_questions[:1])
-        
-        # Fill remaining slots with general but personalized questions
         general_fallbacks = [
             "What would someone who knows you well say has changed most about you?",
             "If you could wave a magic wand and change one thing, what would it be?",
             "What small thing still feels meaningful to you?",
             "How has this experience changed what's important to you?",
-            "What do you wish people understood about what you're going through?"
+            "What do you wish people understood about what you're going through?",
+            "What has helped you get through difficult phases in the past?",
+            "How do you typically express or release heavy emotions?",
+            "What kind of setting or environment makes you feel safest and most at ease?",
+            "How has your self-care routine changed since you started feeling this way?",
+            "What is one goal, no matter how small, that you'd like to work towards?"
         ]
+
+        severe_dep_pool = list(severe_depression_questions)
+        mod_dep_pool = list(moderate_depression_questions)
+        anxiety_pool = list(anxiety_focused_questions)
+        sleep_pool = list(sleep_focused_questions)
+        fallback_pool = list(general_fallbacks)
         
-        while len(questions) < 5:
-            for q in general_fallbacks:
-                if q not in questions and len(questions) < 5:
-                    questions.append(q)
+        random.shuffle(severe_dep_pool)
+        random.shuffle(mod_dep_pool)
+        random.shuffle(anxiety_pool)
+        random.shuffle(sleep_pool)
+        random.shuffle(fallback_pool)
         
-        return questions[:5]
+        # Depression severity-based selection
+        if analysis["depression_severity"] in ["severe", "moderately_severe"]:
+            questions.extend(severe_dep_pool[:8])
+        elif analysis["depression_severity"] == "moderate":
+            questions.extend(mod_dep_pool[:8])
+        else:
+            questions.extend(mod_dep_pool[:4])
+        
+        # Add anxiety questions if relevant
+        if analysis["anxiety_severity"] in ["moderate", "severe"]:
+            questions.extend(anxiety_pool[:6])
+        else:
+            questions.extend(anxiety_pool[:3])
+        
+        # Add sleep questions if relevant
+        if analysis["sleep_disturbance"] in ["moderate", "significant"]:
+            questions.extend(sleep_pool[:4])
+        else:
+            questions.extend(sleep_pool[:2])
+        
+        # Unique list
+        unique_questions = []
+        for q in questions:
+            if q not in unique_questions:
+                unique_questions.append(q)
+                
+        for q in fallback_pool:
+            if q not in unique_questions and len(unique_questions) < 10:
+                unique_questions.append(q)
+                
+        # Hard fallback check
+        all_shuffled = severe_dep_pool + mod_dep_pool + anxiety_pool + sleep_pool
+        random.shuffle(all_shuffled)
+        while len(unique_questions) < 2:
+            for q in all_shuffled:
+                if q not in unique_questions and len(unique_questions) < 2:
+                    unique_questions.append(q)
+                    
+        return unique_questions[:2]
     
     def _get_fallback_questions(self, analysis: Dict[str, Any]) -> List[str]:
-        """Original fallback questions"""
-        question_bank = {
-            "depression": [
-                "How long have you been experiencing these low mood symptoms?",
-                "What activities or interactions still bring you some sense of pleasure or accomplishment?",
-                "How would you describe your energy levels throughout the day?",
-                "Have you noticed changes in your ability to concentrate or make decisions?",
-                "What does your support system look like right now?"
-            ],
-            "anxiety": [
-                "Can you describe what happens in your body when you feel most anxious?",
-                "Are there specific situations or thoughts that trigger these feelings?",
-                "How does anxiety affect your ability to complete daily tasks?",
-                "What techniques have you tried to manage anxious feelings?",
-                "Do you ever experience panic attacks or intense fear episodes?"
-            ],
-            "sleep_disturbance": [
-                "What does your typical sleep routine look like from evening to morning?",
-                "How do you feel when you wake up in the morning?",
-                "Do you find your mind racing when you try to sleep?",
-                "What have you tried to improve your sleep quality?",
-                "How does poor sleep affect your next day?"
-            ],
-            "general_wellbeing": [
-                "How would you describe your overall quality of life right now?",
-                "What aspects of your life are going well despite these challenges?",
-                "What kind of support would be most helpful to you right now?",
-                "How have you coped with difficult times in the past?",
-                "What would you most like to change about how you're feeling?"
-            ]
-        }
-        
-        questions = []
-        for concern in analysis["primary_concerns"]:
-            if concern in question_bank:
-                questions.extend(question_bank[concern][:2])
-        
-        # Fill remaining slots
-        general_questions = question_bank["general_wellbeing"]
-        while len(questions) < 5:
-            for q in general_questions:
-                if q not in questions and len(questions) < 5:
-                    questions.append(q)
-        
-        return questions[:5]
+        """Original fallback questions wrapper - updated to return 2 questions"""
+        return self._get_enhanced_fallback_questions(analysis)
     
     def generate_comprehensive_report(self, initial_answers: Dict[int, int], 
                                     follow_up_responses: Dict[str, str]) -> Dict[str, Any]:
-        """Generate detailed clinical report using LLM"""
-        if not self.llm:
-            return self._generate_basic_report(initial_answers, follow_up_responses)
+        """Generate detailed clinical report using LLM with response effort verification"""
+        report = {}
+        # Always run analysis and clinical context search to identify referenced sources
+        analysis = self.analyze_initial_answers(initial_answers)
+        clinical_context, referred_sources = self.retrieve_clinical_context(analysis)
         
-        try:
-            # Analyze initial answers
-            analysis = self.analyze_initial_answers(initial_answers)
-            clinical_context = self.retrieve_clinical_context(analysis)
-            
-            # Prepare concise data for LLM
-            answers_summary = self._summarize_answers(initial_answers)
-            follow_up_summary = self._summarize_follow_up(follow_up_responses)
-            
-            # Generate report with limited context
-            chain = self.report_prompt | self.llm
-            response = chain.invoke({
-                "initial_answers": answers_summary,
-                "follow_up_answers": follow_up_summary,
-                "clinical_context": clinical_context[:800]  # Strict limit
-            })
-            
-            # Parse JSON response
-            report_text = response.strip()
+        if not self.llm:
+            report = self._generate_basic_report(initial_answers, follow_up_responses)
+        else:
             try:
-                report = json.loads(report_text)
-                return self._validate_report_structure(report)
-            except json.JSONDecodeError:
-                return self._generate_basic_report(initial_answers, follow_up_responses)
+                # Prepare concise data for LLM
+                answers_summary = self._summarize_answers(initial_answers)
+                follow_up_summary = self._summarize_follow_up(follow_up_responses)
                 
-        except Exception as e:
-            print(f"❌ Error generating report with LLM: {e}")
-            return self._generate_basic_report(initial_answers, follow_up_responses)
+                # Generate report with limited context
+                chain = self.report_prompt | self.llm
+                response = chain.invoke({
+                    "initial_answers": answers_summary,
+                    "follow_up_answers": follow_up_summary,
+                    "clinical_context": clinical_context[:4000]  # Increased context window characters
+                })
+                
+                # Parse JSON response
+                report_text = response.strip()
+                try:
+                    report = json.loads(report_text)
+                    report = self._validate_report_structure(report)
+                except json.JSONDecodeError:
+                    report = self._generate_basic_report(initial_answers, follow_up_responses)
+            except Exception as e:
+                print(f"[LLM ERROR] Error generating report with LLM: {e}")
+                report = self._generate_basic_report(initial_answers, follow_up_responses)
+        
+        # Check LLM response validity flag first
+        llm_valid = True
+        is_llm_report = "response_validity" in report
+        if is_llm_report and isinstance(report["response_validity"], dict):
+            llm_valid = report["response_validity"].get("is_valid", True)
+            
+        # Fallback validity: our simplified hardcoded checks
+        validity = self._check_response_validity(follow_up_responses)
+        report["validation"] = validity
+        
+        # Inject patient's actual text responses so they are always visible in the report copy
+        report["patient_responses"] = [
+            {"question": q, "answer": a} for q, a in follow_up_responses.items()
+        ]
+        
+        # Inject referred source documents list
+        report["referred_sources"] = referred_sources
+        
+        # Override clinical metrics if LLM dynamically flags as invalid, or if using fallback and rules flag it
+        is_invalid = (not llm_valid) if is_llm_report else validity["low_effort"]
+        
+        if is_invalid:
+            report["risk_level"] = "unreliable"
+            report["diagnostic_considerations"] = ["Assessment Unreliable: Vague/off-topic response effort detected"]
+            report["symptom_severity"] = {
+                "depression": "unreliable",
+                "anxiety": "unreliable",
+                "sleep": "unreliable",
+                "overall": "unreliable"
+            }
+            # List actual responses to show the physician what was typed
+            actual_responses_str = ", ".join(f"'{a}'" for a in follow_up_responses.values() if str(a).strip())
+            report["clinical_insights"] = [
+                "The patient's textual answers do not contain relevant clinical info.",
+                f"Patient's actual input text: {actual_responses_str}"
+            ]
+            report["functional_impact"] = "Cannot be assessed due to non-compliant response effort."
+            report["recommendations"] = [
+                "⚠️ Clinical attention required: Patient text responses were flagged as repetitive, off-topic, or clinically uninformative.",
+                "Conduct a face-to-face or direct verbal clinical intake to reconstruct patient history.",
+                "Discard the automated symptom severity scales as the responses are invalid."
+            ]
+            report["chief_complaint"] = "Vague/off-topic response effort detected."
+            if "crisis_indicators" not in report or not isinstance(report["crisis_indicators"], list):
+                report["crisis_indicators"] = []
+            report["crisis_indicators"].extend(validity["alerts"])
+            
+        return report
     
+    def _check_response_validity(self, responses: Dict[str, str]) -> Dict[str, Any]:
+        """
+        Evaluate if patient's textual responses are clinical, meaningful, or low-effort/vague/off-topic.
+        Returns a dictionary with status, warnings, and messages.
+        """
+        if not responses:
+            return {
+                "is_valid": True,
+                "low_effort": False,
+                "alerts": []
+            }
+            
+        total_answers = 0
+        vague_answers = 0
+        unique_answers = set()
+        gibberish_words = {
+            "blah", "blahh", "blahhh", "asdf", "xyz", "abc", "qwerty"
+        }
+        
+        for q, a in responses.items():
+            a_clean = str(a).strip().lower()
+            if not a_clean:
+                continue
+            total_answers += 1
+            unique_answers.add(a_clean)
+            
+            # An answer is vague in rules ONLY if it is empty, tiny (< 3 chars), in gibberish words, or repeated characters
+            is_vague = False
+            if len(a_clean) < 3:
+                is_vague = True
+            elif a_clean in gibberish_words:
+                is_vague = True
+            elif all(c == a_clean[0] for c in a_clean) and len(a_clean) > 2:
+                is_vague = True
+                
+            if is_vague:
+                vague_answers += 1
+                
+        # If the user typed the exact same answer for multiple questions
+        is_repetitive = total_answers > 2 and len(unique_answers) <= 1
+        
+        # Flag if ANY answer is vague, off-topic, or gibberish, or if answers are highly repetitive
+        is_low_effort = vague_answers > 0 or is_repetitive
+        
+        alerts = []
+        if is_low_effort:
+            alerts.append(
+                "⚠️ RESPONSE VALIDATION ALERT: Patient input was flagged as repetitive, off-topic, or clinically uninformative. Clinical intake validity is compromised."
+            )
+            
+        return {
+            "is_valid": not is_low_effort,
+            "low_effort": is_low_effort,
+            "alerts": alerts,
+            "vague_count": vague_answers,
+            "total_count": total_answers
+        }
+
     def _summarize_answers(self, answers: Dict[int, int]) -> str:
         """Create concise summary of initial answers"""
-        depression_score = sum(answers.get(i, 0) for i in range(9))
-        anxiety_score = sum(answers.get(i, 0) for i in [4, 5, 6])
-        return f"Depression: {depression_score}/27, Anxiety: {anxiety_score}/21, Sleep: {answers.get(2,0)}/3"
-    
+        depression_score = sum(int(answers.get(o, 0)) for o in [1, 2, 3, 4, 5, 11, 12, 13])
+        anxiety_score = sum(int(answers.get(o, 0)) for o in [6, 7, 8, 9, 10, 14, 15])
+        return f"Depression: {depression_score}/24, Anxiety: {anxiety_score}/21"
+
     def _summarize_follow_up(self, responses: Dict[str, str]) -> str:
         """Create concise summary of follow-up responses"""
         summary = []
-        for q, a in list(responses.items())[:3]:  # Only use first 3
-            summary.append(f"Q: {q[:50]}... A: {a[:30]}...")
+        for q, a in list(responses.items()):
+            summary.append(f"Q: {q[:100]} A: {a[:2000]}")
         return " | ".join(summary)
     
     def _validate_report_structure(self, report: Dict[str, Any]) -> Dict[str, Any]:
         """Ensure report has all required fields"""
         required_fields = [
             "risk_level", "diagnostic_considerations", "symptom_severity",
-            "clinical_insights", "functional_impact", "recommendations", "crisis_indicators"
+            "clinical_insights", "functional_impact", "recommendations", 
+            "crisis_indicators", "chief_complaint", "response_validity"
         ]
         
         for field in required_fields:
             if field not in report:
-                report[field] = "Not specified"
+                if field == "response_validity":
+                    report[field] = {"is_valid": True, "reason": "Defaulting to valid"}
+                else:
+                    report[field] = "Not specified"
         
         return report
     
     def _generate_basic_report(self, initial_answers: Dict[int, int], 
-                             follow_up_responses: Dict[str, str]) -> Dict[str, Any]:
+                              follow_up_responses: Dict[str, str]) -> Dict[str, Any]:
         """Generate basic report without LLM"""
         analysis = self.analyze_initial_answers(initial_answers)
         
+        # Rule-based crisis keywords detection in patient's textual responses
+        crisis_keywords = [
+            "suicide", "kill myself", "end my life", "hurt myself", "cutting", 
+            "overdose", "want to die", "better off dead", "self-harm", "hanging", 
+            "poisoning", "jump from", "suicidal"
+        ]
+        
+        has_crisis_text = False
+        if follow_up_responses:
+            for val in follow_up_responses.values():
+                val_lower = str(val).lower()
+                if any(kw in val_lower for kw in crisis_keywords):
+                    has_crisis_text = True
+                    break
+        
+        # Dynamic risk level determination
+        risk_level = "low"
+        if has_crisis_text:
+            risk_level = "crisis"
+        elif analysis["depression_severity"] == "severe" or analysis["anxiety_severity"] == "severe":
+            risk_level = "high"
+        elif analysis["depression_severity"] in ["moderate", "moderately_severe"] or analysis["anxiety_severity"] == "moderate":
+            risk_level = "moderate"
+            
+        # Update analysis risk
+        analysis["suicide_risk"] = "high" if risk_level in ["high", "crisis"] else risk_level
+        
+        # Extract a single-sentence core complaint from patient responses for the clinician
+        core_reason = ""
+        if follow_up_responses:
+            combined_responses = " ".join(val for val in follow_up_responses.values() if val).strip()
+            if combined_responses:
+                # Take the first sentence or first 120 characters
+                first_sentence = combined_responses.split(".")[0].strip()
+                if len(first_sentence) > 120:
+                    core_reason = first_sentence[:117] + "..."
+                else:
+                    core_reason = first_sentence + "."
+        
+        if not core_reason:
+            core_reason = "Initial screening for mental health evaluation."
+            
         return {
-            "risk_level": analysis["suicide_risk"],
+            "risk_level": risk_level,
             "diagnostic_considerations": [
                 f"Potential {concern.replace('_', ' ')}" for concern in analysis["primary_concerns"]
             ],
@@ -551,34 +851,49 @@ JSON only:"""
                 "depression": analysis["depression_severity"],
                 "anxiety": analysis["anxiety_severity"], 
                 "sleep": analysis["sleep_disturbance"],
-                "overall": "severe" if analysis["suicide_risk"] == "high" else "moderate"
+                "sleep_disturbance": analysis["sleep_disturbance"],
+                "overall": "severe" if risk_level in ["high", "crisis"] else "moderate" if risk_level == "moderate" else "minimal"
             },
+            "anxiety_intensity": analysis["anxiety_intensity"],
+            "depression_intensity": analysis["depression_intensity"],
+            "functioning_difficulty": analysis["functioning_difficulty"],
             "clinical_insights": [
                 f"Primary concerns: {', '.join(analysis['primary_concerns'])}",
-                f"Follow-up focus areas: {', '.join(analysis['follow_up_focus'])}"
+                f"Follow-up focus areas: {', '.join(analysis['follow_up_focus'])}",
+                "Crisis keywords detected in follow-up essay responses." if has_crisis_text else "No acute crisis keywords detected in text answers."
             ],
             "functional_impact": "Assessment indicates significant impact on daily functioning",
             "recommendations": self._generate_basic_recommendations(analysis),
-            "crisis_indicators": ["Suicide risk present"] if analysis["suicide_risk"] == "high" else []
+            "crisis_indicators": ["Suicide risk present / Crisis alerts triggered by patient response"] if has_crisis_text else [],
+            "chief_complaint": core_reason
         }
     
     def _generate_basic_recommendations(self, analysis: Dict[str, Any]) -> List[str]:
-        """Generate basic clinical recommendations"""
+        """Generate basic clinical recommendations based on actual score thresholds"""
         recommendations = []
         
         if analysis["suicide_risk"] == "high":
-            recommendations.append("🚨 IMMEDIATE: Crisis assessment and safety planning required")
-            recommendations.append("Consider urgent psychiatric evaluation")
+            recommendations.append("🚨 IMMEDIATE: Crisis assessment and safety planning required due to elevated suicidal ideation indices (score threshold reached).")
         
-        if analysis["depression_severity"] in ["moderate", "moderately_severe", "severe"]:
-            recommendations.append("Comprehensive depression assessment recommended")
-            recommendations.append("Consider therapy or medication evaluation")
-        
-        if analysis["anxiety_severity"] in ["moderate", "severe"]:
-            recommendations.append("Anxiety management strategies indicated")
-            recommendations.append("Consider cognitive-behavioral therapy")
-        
-        recommendations.append("Review social support systems and coping strategies")
-        recommendations.append("Schedule follow-up within 1-2 weeks")
+        # Depression indicators
+        dep_severity = analysis["depression_severity"]
+        if dep_severity in ["severe", "moderately_severe"]:
+            recommendations.append(f"Initiate major mood disorder treatment protocol. Standard clinical guidelines dictate full diagnostic workup for depression because the patient's score indicates a {dep_severity.replace('_', ' ')} presentation.")
+        elif dep_severity == "moderate":
+            recommendations.append("Schedule diagnostic follow-up for moderate depressive symptoms to rule out adjustment disorder or persistent depressive disorder.")
+            
+        # Anxiety indicators
+        anx_severity = analysis["anxiety_severity"]
+        if anx_severity in ["severe", "moderate"]:
+            recommendations.append(f"Conduct full generalized anxiety evaluation. GAD guideline protocols specify somatic and worry monitoring for {anx_severity} anxiety scoring.")
+            
+        # Sleep indicators
+        sleep = analysis["sleep_disturbance"]
+        if sleep in ["significant", "severe"]:
+            recommendations.append("Recommend sleep study or sleep architecture questionnaire due to reports of significant sleep maintenance/latency disruption.")
+            
+        # General wellbeing
+        recommendations.append("Initiate baseline mood and cognitive symptom charting to track severity fluctuations over the next 14 days.")
+        recommendations.append("Schedule professional clinical intake interview within 1-2 weeks for diagnostic verification.")
         
         return recommendations

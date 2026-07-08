@@ -5,6 +5,9 @@ from django.db import models
 from django.contrib.auth.models import User
 import uuid
 
+def generate_unique_id():
+    return uuid.uuid4().hex[:10].upper()
+
 class Patient(models.Model):
     GENDER_CHOICES = [
         ('M', 'Male'),
@@ -14,12 +17,16 @@ class Patient(models.Model):
     ]
     
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    patient_id = models.CharField(max_length=10, unique=True, default=uuid.uuid4().hex[:10].upper())
+    patient_id = models.CharField(max_length=10, unique=True, default=generate_unique_id)
     date_of_birth = models.DateField(null=True, blank=True)
     gender = models.CharField(max_length=1, choices=GENDER_CHOICES, blank=True)
     phone_number = models.CharField(max_length=15, blank=True)
     emergency_contact = models.CharField(max_length=100, blank=True)
     address = models.TextField(blank=True)
+    city = models.CharField(max_length=100, blank=True)
+    education_or_occupation = models.CharField(max_length=100, blank=True)
+    age = models.IntegerField(null=True, blank=True)
+    marital_status = models.CharField(max_length=50, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
@@ -28,12 +35,12 @@ class Patient(models.Model):
     
     def save(self, *args, **kwargs):
         if not self.patient_id:
-            self.patient_id = uuid.uuid4().hex[:10].upper()
+            self.patient_id = generate_unique_id()
         super().save(*args, **kwargs)
 
 class Doctor(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    doctor_id = models.CharField(max_length=10, unique=True, default=uuid.uuid4().hex[:10].upper())
+    doctor_id = models.CharField(max_length=10, unique=True, default=generate_unique_id)
     specialization = models.CharField(max_length=100)
     license_number = models.CharField(max_length=50)
     years_of_experience = models.IntegerField(default=0)

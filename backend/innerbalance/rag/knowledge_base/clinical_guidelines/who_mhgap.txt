@@ -1,0 +1,19 @@
+WHO MENTAL HEALTH GAP ACTION PROGRAMME (mhGAP) CLINICAL GUIDELINES
+====================================================================
+
+Core Principles of Care:
+1. Promote respect, dignity, and human rights of people with mental health conditions.
+2. Communicate in an empathetic, supportive, and non-judgmental tone.
+3. Conduct clinical assessments including medical history, psychiatric history, and physical examination.
+
+Depressive Disorders Assessment:
+- Primary symptoms: Persistent low mood, marked loss of interest or pleasure in activities (anhedonia), and decreased energy or increased fatigue.
+- Additional symptoms: Disturbed sleep or insomnia, changes in appetite or weight, anxiety or restlessness, reduced concentration, low self-esteem, feelings of guilt or worthlessness, and thoughts of self-harm or suicide.
+- Severity scoring:
+  * Moderate-to-Severe Depression: Presence of at least one primary symptom and a total of at least 4 symptoms in total, lasting for at least 2 weeks, with significant functional impairment.
+
+Management of Depression:
+- Psychoeducation: Educate patients and families about the nature of depression, expected recovery timeline, and importance of adherence to therapy.
+- Psychosocial support: Offer problem-solving therapy, interpersonal therapy (IPT), cognitive behavioral therapy (CBT), or behavioral activation.
+- Pharmacological management: SSRIs (e.g. Fluoxetine, Amitriptyline) should be initiated for moderate-to-severe cases under supervision, monitoring for side effects and suicidal ideation, especially during the first few weeks of treatment.
+- Follow-up: Regular review schedules (every 1-2 weeks initially) to track symptoms, treatment adherence, and safety.

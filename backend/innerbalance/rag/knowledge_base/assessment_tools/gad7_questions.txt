@@ -1,0 +1,27 @@
+GENERALIZED ANXIETY DISORDER 7-ITEM SCALE (GAD-7)
+==================================================
+
+The GAD-7 is a self-administered patient questionnaire used as a screening tool and severity measure for Generalized Anxiety Disorder.
+
+GAD-7 Questions (Symptom Frequency Over the Last 2 Weeks):
+1. Feeling nervous, anxious, or on edge.
+2. Not being able to stop or control worrying.
+3. Worrying too much about different things.
+4. Trouble relaxing.
+5. Being so restless that it is hard to sit still.
+6. Becoming easily annoyed or irritable.
+7. Feeling afraid, as if something awful might happen.
+
+Scoring System:
+- For each item, the patient responds with:
+  * 0: Not at all
+  * 1: Several days
+  * 2: More than half the days
+  * 3: Nearly every day
+- Total Score Range: 0 to 21
+
+Clinical Interpretation:
+- 0 to 4: Minimal anxiety (no clinical intervention typically needed)
+- 5 to 9: Mild anxiety (monitoring, situational stress coping)
+- 10 to 14: Moderate anxiety (clinical evaluation, cognitive interventions, therapy)
+- 15 or higher: Severe anxiety (active clinical management, high-intensity CBT, pharmacotherapy evaluation)

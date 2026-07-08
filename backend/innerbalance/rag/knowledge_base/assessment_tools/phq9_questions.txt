@@ -1,0 +1,30 @@
+PATIENT HEALTH QUESTIONNAIRE 9-ITEM SCALE (PHQ-9)
+=================================================
+
+The PHQ-9 is a multipurpose instrument for screening, diagnosing, monitoring and measuring the severity of depression.
+
+PHQ-9 Questions (Symptom Frequency Over the Last 2 Weeks):
+1. Little interest or pleasure in doing things (anhedonia).
+2. Feeling down, depressed, or hopeless.
+3. Trouble falling or staying asleep, or sleeping too much (sleep disturbance).
+4. Feeling tired or having little energy.
+5. Poor appetite or overeating.
+6. Feeling bad about yourself - or that you are a failure or have let yourself or your family down.
+7. Trouble concentrating on things, such as reading the newspaper or watching television.
+8. Moving or speaking so slowly that other people could have noticed? Or the opposite - being so fidgety or restless that you have been moving around a lot more than usual.
+9. Thoughts that you would be better off dead or of hurting yourself in some way (suicide risk).
+
+Scoring System:
+- For each item, the patient responds with:
+  * 0: Not at all
+  * 1: Several days
+  * 2: More than half the days
+  * 3: Nearly every day
+- Total Score Range: 0 to 27
+
+Clinical Interpretation:
+- 0 to 4: Minimal depression
+- 5 to 9: Mild depression
+- 10 to 14: Moderate depression
+- 15 to 19: Moderately severe depression
+- 20 or higher: Severe depression

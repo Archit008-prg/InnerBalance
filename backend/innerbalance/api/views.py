@@ -18,9 +18,9 @@ def test_api(request):
 # ADD THIS FUNCTION - it's referenced in urls.py but missing
 @api_view(['GET'])
 def get_questions(request):
-    """Get all assessment questions"""
+    """Get all initial assessment questions (MCQs only, excluding follow-ups)"""
     try:
-        questions = Question.objects.all().order_by('order')
+        questions = Question.objects.filter(is_follow_up=False).order_by('order')[:18]
         question_data = []
         
         for question in questions:
@@ -32,7 +32,7 @@ def get_questions(request):
                 'order': question.order
             })
         
-        print(f"✅ Found {len(question_data)} questions in database")  # Debug print
+        print(f"[SUCCESS] Found {len(question_data)} questions in database")  # Debug print
         
         return Response({
             'count': len(question_data),
@@ -41,7 +41,7 @@ def get_questions(request):
         
     except Exception as e:
         # Print detailed error for debugging
-        print(f"❌ Error in get_questions: {str(e)}")
+        print(f"[ERROR] Error in get_questions: {str(e)}")
         traceback.print_exc()
         
         # Return empty questions with error info

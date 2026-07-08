@@ -10,6 +10,7 @@ class Question(models.Model):
         ('multiple', 'Multiple Choice'),
         ('text', 'Text Response'),
         ('yesno', 'Yes/No'),
+        ('slider', 'Slider Scale (1-5)'),
     ]
     
     CATEGORY_CHOICES = [
@@ -21,6 +22,8 @@ class Question(models.Model):
         ('mood', 'Mood'),
         ('social', 'Social Functioning'),
         ('general', 'General Health'),
+        ('suicidality', 'Suicidality'),
+        ('functioning', 'Functioning'),
     ]
     
     text = models.TextField()
@@ -85,6 +88,7 @@ class AssessmentReport(models.Model):
     summary = models.TextField()
     risk_factors = models.TextField()
     recommendations = models.TextField()
+    full_report_json = models.TextField(blank=True, null=True)
     generated_at = models.DateTimeField(auto_now_add=True)
     
     def __str__(self):

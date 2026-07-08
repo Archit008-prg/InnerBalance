@@ -6,7 +6,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         questions = [
-        # Core Depression Symptoms (DSM-5 based)
+            # Core Depression Symptoms (DSM-5 based)
             {
                 'text': 'How often have you felt little interest or pleasure in doing things over the past two weeks?',
                 'type': 'scale',
@@ -52,27 +52,76 @@ class Command(BaseCommand):
                 'order': 7
             },
             {
-                'text': 'How often have you felt easily annoyed or irritable?',
+                'text': 'How often have you felt so restless that it is hard to sit still?',
                 'type': 'scale',
-                'category': 'mood',
+                'category': 'anxiety',
                 'order': 8
             },
-            
-            # Critical Safety Questions
             {
-                'text': 'How often have you had thoughts that you would be better off dead or hurting yourself?',
+                'text': 'How often have you become easily annoyed or irritable?',
                 'type': 'scale', 
-                'category': 'suicidality',
-                'order': 9,
-                'risk_trigger': True  # Flag for crisis protocol
+                'category': 'anxiety',
+                'order': 9
             },
-            
-            # Social & Functional Impact
             {
-                'text': 'How often have these difficulties affected your work, social life, or home responsibilities?',
+                'text': 'How often have you felt afraid as if something awful might happen?',
+                'type': 'scale',
+                'category': 'anxiety',
+                'order': 10
+            },
+
+            # Additional clinical scale items (DSM-5 / GAD / PHQ)
+            {
+                'text': 'How often have you felt bad about yourself - or that you are a failure or have let yourself or your family down?',
+                'type': 'scale',
+                'category': 'depression',
+                'order': 11
+            },
+            {
+                'text': 'How often have you had trouble concentrating on things, such as reading the newspaper or watching television?',
+                'type': 'scale',
+                'category': 'depression',
+                'order': 12
+            },
+            {
+                'text': 'How often have you moved or spoken so slowly that other people could have noticed? Or the opposite - being so fidgety or restless that you have been moving around a lot more than usual?',
+                'type': 'scale',
+                'category': 'depression',
+                'order': 13
+            },
+            {
+                'text': 'How often have you worried too much about different things?',
+                'type': 'scale',
+                'category': 'anxiety',
+                'order': 14
+            },
+            {
+                'text': 'How often have you had trouble relaxing?',
+                'type': 'scale',
+                'category': 'anxiety',
+                'order': 15
+            },
+
+            # Distress Intensity Sliders (1.0 to 5.0 with mid-levels like PUSH-D)
+            {
+                'text': 'On a scale of 1.0 to 5.0, how intense has your anxiety or worry been when at its worst over the past two weeks?',
+                'type': 'slider',
+                'category': 'anxiety',
+                'order': 16
+            },
+            {
+                'text': 'On a scale of 1.0 to 5.0, how intense has your low mood or lack of interest been when at its worst over the past two weeks?',
+                'type': 'slider',
+                'category': 'depression',
+                'order': 17
+            },
+
+            # Daily Functioning Scale
+            {
+                'text': 'If you checked off any problems, how difficult have these problems made it for you to do your work, take care of things at home, or get along with other people?',
                 'type': 'scale',
                 'category': 'functioning',
-                'order': 10
+                'order': 18
             }
         ]
 
