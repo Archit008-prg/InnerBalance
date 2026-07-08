@@ -1,22 +1,11 @@
 import os
 os.environ["HF_HOME"] = "F:\\huggingface"
 import json
-import torch
 import random
 from typing import List, Dict, Any
 from langchain_core.documents import Document
-from langchain_community.vectorstores import Chroma
-from langchain_community.embeddings import HuggingFaceEmbeddings
-from langchain_community.llms import HuggingFacePipeline
-from langchain.chains import RetrievalQA
 from langchain.prompts import PromptTemplate
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from transformers import (
-    AutoTokenizer, 
-    AutoModelForCausalLM, 
-    pipeline,
-    BitsAndBytesConfig
-)
 
 class MeditronRAGSystem:
     def __init__(self):
@@ -43,29 +32,48 @@ class MeditronRAGSystem:
 
     def setup_embeddings(self):
         """Setup sentence embeddings for vector store"""
-        self.embeddings = HuggingFaceEmbeddings(
-            model_name="sentence-transformers/all-MiniLM-L6-v2",
-            model_kwargs={'device': 'cpu'}
-        )
+        try:
+            from langchain_community.embeddings import HuggingFaceEmbeddings
+            self.embeddings = HuggingFaceEmbeddings(
+                model_name="sentence-transformers/all-MiniLM-L6-v2",
+                model_kwargs={'device': 'cpu'}
+            )
+        except Exception as e:
+            print(f"[RAG WARNING] Could not initialize local embeddings (skipping local vector store): {e}")
+            self.embeddings = None
     
     def setup_vector_store(self):
         """Initialize or load vector store"""
-        if os.path.exists(self.vector_db_path) and os.listdir(self.vector_db_path):
-            self.vector_store = Chroma(
-                persist_directory=self.vector_db_path,
-                embedding_function=self.embeddings
-            )
-            print("Loaded existing vector store")
-        else:
-            self.vector_store = Chroma(
-                persist_directory=self.vector_db_path,
-                embedding_function=self.embeddings
-            )
-            self.load_knowledge_base()
-            print("Created new vector store")
+        if not self.embeddings:
+            self.vector_store = None
+            print("Vector store disabled (no embeddings available)")
+            return
+            
+        try:
+            from langchain_community.vectorstores import Chroma
+            if os.path.exists(self.vector_db_path) and os.listdir(self.vector_db_path):
+                self.vector_store = Chroma(
+                    persist_directory=self.vector_db_path,
+                    embedding_function=self.embeddings
+                )
+                print("Loaded existing vector store")
+            else:
+                self.vector_store = Chroma(
+                    persist_directory=self.vector_db_path,
+                    embedding_function=self.embeddings
+                )
+                self.load_knowledge_base()
+                print("Created new vector store")
+        except Exception as e:
+            print(f"[RAG WARNING] Could not initialize Chroma vector store: {e}")
+            self.vector_store = None
             
     def rebuild_vector_store(self):
         """Reset the vector store collection and reload all knowledge base documents"""
+        if not self.vector_store:
+            print("[RAG WARNING] Rebuild requested but vector store is not initialized.")
+            return
+            
         try:
             # Delete all documents in the Chroma collection
             results = self.vector_store._collection.get()
@@ -139,6 +147,9 @@ class MeditronRAGSystem:
                 return
             
             print(f"[LLM] Loading model locally: {model_name}")
+            import torch
+            from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
+            from langchain_community.llms import HuggingFacePipeline
             
             # Load tokenizer and model
             self.tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
@@ -186,6 +197,8 @@ class MeditronRAGSystem:
             model_name = "distilgpt2"
             
             print(f"[LLM] Loading fallback model: {model_name}")
+            from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
+            from langchain_community.llms import HuggingFacePipeline
             
             self.tokenizer = AutoTokenizer.from_pretrained(model_name)
             self.model = AutoModelForCausalLM.from_pretrained(model_name)
@@ -318,7 +331,7 @@ JSON only:"""
                     ))
         
         # Split documents and add to vector store
-        if documents:
+        if documents and self.vector_store:
             text_splitter = RecursiveCharacterTextSplitter(
                 chunk_size=1000,
                 chunk_overlap=200
@@ -327,6 +340,8 @@ JSON only:"""
             self.vector_store.add_documents(split_docs)
             self.vector_store.persist()
             print(f"[VECTOR STORE] Loaded {len(split_docs)} document chunks into vector store")
+        elif not self.vector_store:
+            print("[VECTOR STORE] Skipping database loading (vector store is disabled/inactive)")
         else:
             print("[VECTOR STORE WARNING] No documents found in knowledge base")
     
@@ -405,20 +420,46 @@ JSON only:"""
         query = " ".join(query_terms)
         
         # Retrieve most relevant documents (k=4 for richer context)
-        docs = self.vector_store.similarity_search(query, k=4)
+        docs = []
+        if self.vector_store:
+            try:
+                docs = self.vector_store.similarity_search(query, k=4)
+            except Exception as e:
+                print(f"[RAG WARNING] Similarity search failed: {e}")
         
         context = "CLINICAL CONTEXT:\n"
         referred_sources = []
-        for i, doc in enumerate(docs):
-            source_name = doc.metadata.get('source', 'Clinical Guideline')
-            # Clean name for readable display (e.g. clinical_guidelines/nice_depression.txt -> Nice Depression)
-            display_name = source_name.split("/")[-1].replace(".txt", "").replace(".json", "").replace("_", " ").title()
-            
-            if display_name not in referred_sources:
-                referred_sources.append(display_name)
+        
+        if docs:
+            for i, doc in enumerate(docs):
+                source_name = doc.metadata.get('source', 'Clinical Guideline')
+                # Clean name for readable display (e.g. clinical_guidelines/nice_depression.txt -> Nice Depression)
+                display_name = source_name.split("/")[-1].replace(".txt", "").replace(".json", "").replace("_", " ").title()
                 
-            context += f"\n--- {display_name.upper()} ---\n"
-            context += doc.page_content[:1200] + "\n"  # Shorter content
+                if display_name not in referred_sources:
+                    referred_sources.append(display_name)
+                    
+                context += f"\n--- {display_name.upper()} ---\n"
+                context += doc.page_content[:1200] + "\n"  # Shorter content
+        else:
+            # Fallback clinical context: read directly from files!
+            guideline_files = [
+                "clinical_guidelines/nice_depression.txt",
+                "clinical_guidelines/who_mhgap.txt",
+                "diagnostic_criteria/anxiety_dsm5.txt"
+            ]
+            for file_path in guideline_files:
+                full_path = os.path.join(self.knowledge_base_path, file_path)
+                if os.path.exists(full_path):
+                    display_name = file_path.split("/")[-1].replace(".txt", "").replace("_", " ").title()
+                    referred_sources.append(display_name)
+                    try:
+                        with open(full_path, 'r', encoding='utf-8') as f:
+                            content = f.read()
+                            context += f"\n--- {display_name.upper()} ---\n"
+                            context += content[:1000] + "\n"
+                    except Exception as e:
+                        print(f"[RAG WARNING] Failed to read fallback file {file_path}: {e}")
         
         return context, referred_sources
     

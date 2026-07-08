@@ -17,16 +17,9 @@ django-cors-headers==4.3.1
 # API Documentation
 drf-yasg==1.21.5
 
-# RAG & AI Dependencies (Compatible versions)
+# RAG & AI Dependencies
 langchain
-langchain-community  #
-chromadb==0.4.15
-sentence-transformers==2.2.2
-transformers==4.35.2
-torch==2.1.1
-accelerate==0.24.1
-bitsandbytes==0.41.1
+langchain-community
 huggingface-hub==0.19.4
 pydantic==1.10.12
-fastapi==0.104.1
 numpy==1.24.3
