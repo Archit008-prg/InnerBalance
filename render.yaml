@@ -54,5 +54,4 @@ databases:
   # 3. Dedicated PostgreSQL Instance
   - name: innerbalance-db
     databaseName: innerbalance
-    user: postgres
     plan: free
