@@ -5,6 +5,10 @@ class Command(BaseCommand):
     help = 'Load final 10 refined mental health assessment questions'
 
     def handle(self, *args, **options):
+        # Clear existing non-follow-up placeholder questions to prevent duplicates
+        Question.objects.filter(is_follow_up=False).delete()
+        self.stdout.write("Cleared existing question placeholders.")
+
         questions = [
             # Core Depression Symptoms (DSM-5 based)
             {
