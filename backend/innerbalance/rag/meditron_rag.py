@@ -364,6 +364,8 @@ JSON only:"""
         functioning_score = int(answers.get(18, 0))
         
         analysis = {
+            "depression_score": depression_score,
+            "anxiety_score": anxiety_score,
             "depression_severity": self._score_phq9(depression_score * 1.125), # scale up to 27 max for normal PHQ-9 alignment
             "anxiety_severity": self._score_gad7(anxiety_score), # GAD-7 alignment (max 21)
             "sleep_disturbance": "significant" if sleep_score >= 2 else "moderate" if sleep_score == 1 else "minimal",
@@ -691,9 +693,18 @@ JSON only:"""
                 # Parse JSON response
                 report_text = response.strip()
                 try:
-                    report = json.loads(report_text)
+                    # Robust extraction of JSON substring
+                    start_idx = report_text.find('{')
+                    end_idx = report_text.rfind('}')
+                    if start_idx != -1 and end_idx != -1:
+                        json_str = report_text[start_idx:end_idx+1]
+                        report = json.loads(json_str)
+                    else:
+                        report = json.loads(report_text)
+                    
                     report = self._validate_report_structure(report)
-                except json.JSONDecodeError:
+                except Exception as json_err:
+                    print(f"[JSON ERROR] Failed to extract/parse LLM JSON: {json_err}. Raw response snippet: {report_text[:250]}")
                     report = self._generate_basic_report(initial_answers, follow_up_responses)
             except Exception as e:
                 print(f"[LLM ERROR] Error generating report with LLM: {e}")
@@ -882,6 +893,84 @@ JSON only:"""
         
         if not core_reason:
             core_reason = "Initial screening for mental health evaluation."
+
+        # Dynamically build highly detailed clinical insights
+        clinical_insights = []
+        
+        # Depressive symptoms insights
+        dep_symptoms = []
+        if int(initial_answers.get(1, 0)) >= 2:
+            dep_symptoms.append("significant loss of interest/pleasure (anhedonia)")
+        if int(initial_answers.get(2, 0)) >= 2:
+            dep_symptoms.append("persistent low or hopeless mood")
+        if int(initial_answers.get(4, 0)) >= 2:
+            dep_symptoms.append("pronounced fatigue or energy depletion")
+        if int(initial_answers.get(11, 0)) >= 2:
+            dep_symptoms.append("feelings of worthlessness or self-blame")
+        if int(initial_answers.get(12, 0)) >= 2:
+            dep_symptoms.append("cognitive focus deficits and difficulty concentrating")
+        if int(initial_answers.get(13, 0)) >= 2:
+            dep_symptoms.append("psychomotor deceleration or agitation")
+            
+        if dep_symptoms:
+            clinical_insights.append(f"Depression Profile: Patient reports {', '.join(dep_symptoms)} over the past two weeks.")
+            
+        # Anxiety symptoms insights
+        anx_symptoms = []
+        if int(initial_answers.get(6, 0)) >= 2:
+            anx_symptoms.append("frequent states of being on edge or highly nervous")
+        if int(initial_answers.get(7, 0)) >= 2:
+            anx_symptoms.append("uncontrollable or intrusive worry loops")
+        if int(initial_answers.get(15, 0)) >= 2:
+            anx_symptoms.append("difficulty achieving relaxation")
+        if int(initial_answers.get(10, 0)) >= 2:
+            anx_symptoms.append("somatic dread or acute fear indices")
+            
+        if anx_symptoms:
+            clinical_insights.append(f"Anxiety Profile: Patient report reveals {', '.join(anx_symptoms)} indicating generalized distress patterns.")
+            
+        # Intensity insights
+        dep_intensity = float(initial_answers.get(17, 1.0))
+        anx_intensity = float(initial_answers.get(16, 1.0))
+        clinical_insights.append(f"Distress Severity: Peak self-rated distress intensity registered at {dep_intensity}/5.0 for low mood, and {anx_intensity}/5.0 for anxiety symptoms.")
+        
+        # Sleep & Somatic patterns
+        sleep_score = int(initial_answers.get(3, 0))
+        appetite_score = int(initial_answers.get(5, 0))
+        somatic_details = []
+        if sleep_score >= 2:
+            somatic_details.append("significant sleep disturbance (latency/maintenance issues)")
+        if appetite_score >= 2:
+            somatic_details.append("appetite shifts (overeating or restriction)")
+            
+        if somatic_details:
+            clinical_insights.append(f"Vegetative Indicators: Somatic evaluations detect {' and '.join(somatic_details)} directly complicating daily functioning.")
+
+        if has_crisis_text:
+            clinical_insights.append("CRITICAL: Essay responses contain keyword patterns indicating possible active self-harm ideation or severe panic triggers.")
+        else:
+            clinical_insights.append("Crisis Safety: No acute crisis keywords detected in patient's open-ended responses.")
+
+        # Summarize follow-up responses for context
+        if follow_up_responses:
+            essay_insights = []
+            for question_text, answer_text in follow_up_responses.items():
+                if answer_text and len(answer_text.strip()) > 5:
+                    short_q = question_text.split("?")[0][:50]
+                    essay_insights.append(f"Patient reported for '{short_q}': '{answer_text}'")
+            if essay_insights:
+                clinical_insights.extend(essay_insights[:2])
+
+        # Dynamic functioning description
+        func_diff = analysis.get("functioning_difficulty", "not difficult at all")
+        if func_diff == "extremely difficult":
+            functional_impact = "Assessment indicates extreme impairment: the patient finds managing daily activities (work, relationships, home life) extremely difficult."
+        elif func_diff == "very difficult":
+            functional_impact = "Assessment indicates significant impairment: the patient experiences major barriers to functioning at work, home, or in social settings."
+        elif func_diff == "somewhat difficult":
+            functional_impact = "Assessment indicates mild impairment: symptoms pose some day-to-day challenges, but functioning is largely preserved."
+        else:
+            functional_impact = "Assessment indicates minimal functional impairment: symptoms do not currently disrupt work, home, or social responsibilities."
             
         return {
             "risk_level": risk_level,
@@ -895,15 +984,11 @@ JSON only:"""
                 "sleep_disturbance": analysis["sleep_disturbance"],
                 "overall": "severe" if risk_level in ["high", "crisis"] else "moderate" if risk_level == "moderate" else "minimal"
             },
-            "anxiety_intensity": analysis["anxiety_intensity"],
-            "depression_intensity": analysis["depression_intensity"],
+            "anxiety_intensity": anxiety_intensity,
+            "depression_intensity": depression_intensity,
             "functioning_difficulty": analysis["functioning_difficulty"],
-            "clinical_insights": [
-                f"Primary concerns: {', '.join(analysis['primary_concerns'])}",
-                f"Follow-up focus areas: {', '.join(analysis['follow_up_focus'])}",
-                "Crisis keywords detected in follow-up essay responses." if has_crisis_text else "No acute crisis keywords detected in text answers."
-            ],
-            "functional_impact": "Assessment indicates significant impact on daily functioning",
+            "clinical_insights": clinical_insights,
+            "functional_impact": functional_impact,
             "recommendations": self._generate_basic_recommendations(analysis),
             "crisis_indicators": ["Suicide risk present / Crisis alerts triggered by patient response"] if has_crisis_text else [],
             "chief_complaint": core_reason
@@ -918,15 +1003,17 @@ JSON only:"""
         
         # Depression indicators
         dep_severity = analysis["depression_severity"]
+        dep_score = analysis.get("depression_score", 0)
         if dep_severity in ["severe", "moderately_severe"]:
-            recommendations.append(f"Initiate major mood disorder treatment protocol. Standard clinical guidelines dictate full diagnostic workup for depression because the patient's score indicates a {dep_severity.replace('_', ' ')} presentation.")
+            recommendations.append(f"Initiate major mood disorder treatment protocol. Standard clinical guidelines dictate full diagnostic workup for depression because the patient's raw PHQ-8 score ({dep_score}/24) indicates a {dep_severity.replace('_', ' ')} presentation.")
         elif dep_severity == "moderate":
-            recommendations.append("Schedule diagnostic follow-up for moderate depressive symptoms to rule out adjustment disorder or persistent depressive disorder.")
+            recommendations.append(f"Schedule diagnostic follow-up for moderate depressive symptoms (PHQ-8 score: {dep_score}/24) to rule out adjustment disorder or persistent depressive disorder.")
             
         # Anxiety indicators
         anx_severity = analysis["anxiety_severity"]
+        anx_score = analysis.get("anxiety_score", 0)
         if anx_severity in ["severe", "moderate"]:
-            recommendations.append(f"Conduct full generalized anxiety evaluation. GAD guideline protocols specify somatic and worry monitoring for {anx_severity} anxiety scoring.")
+            recommendations.append(f"Conduct full generalized anxiety evaluation. GAD guideline protocols specify somatic and worry monitoring for {anx_severity} anxiety (GAD-7 score: {anx_score}/21).")
             
         # Sleep indicators
         sleep = analysis["sleep_disturbance"]

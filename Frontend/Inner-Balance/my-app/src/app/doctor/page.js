@@ -190,7 +190,7 @@ export default function DoctorDashboard() {
       <div className="flex-grow max-w-7xl w-full mx-auto p-4 md:p-6 flex flex-col gap-6">
         
         {/* Dashboard Header */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-card-bg/60 backdrop-blur-xl border border-card-border p-6 rounded-3xl">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-card-bg/60 backdrop-blur-xl border border-card-border p-6 rounded-3xl no-print">
           <div>
             <div className="flex items-center gap-2">
               <span className="bg-primary-accent/10 text-primary-accent p-1.5 rounded-xl">
@@ -232,7 +232,7 @@ export default function DoctorDashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-grow items-stretch">
           
           {/* Patient Queue Sidebar */}
-          <div className="lg:col-span-1 bg-card-bg/60 backdrop-blur-xl border border-card-border rounded-3xl p-5 flex flex-col gap-4 overflow-hidden h-[750px]">
+          <div className="lg:col-span-1 bg-card-bg/60 backdrop-blur-xl border border-card-border rounded-3xl p-5 flex flex-col gap-4 overflow-hidden h-[750px] no-print">
             <h3 className="text-sm font-bold uppercase tracking-wider text-text-muted flex items-center gap-1.5">
               <User size={16} className="text-primary-accent" />
               Patient Intake Queue ({filteredAssessments.length})

@@ -129,6 +129,28 @@ button, a, input, textarea, select {
     margin: 0 !important;
     min-height: auto !important;
     padding-top: 0 !important;
+    overflow: visible !important;
+  }
+
+  /* Reset grid layouts so report prints full-width */
+  .grid {
+    display: block !important;
+  }
+
+  /* Force the scrollable report card panel to expand fully in print */
+  .printable-section {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    border: none !important;
+    background: transparent !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    position: static !important;
+    box-shadow: none !important;
   }
   
   /* Format clinical report card to print nicely on A4 */
@@ -142,7 +164,7 @@ button, a, input, textarea, select {
     max-width: 100% !important;
     background: #ffffff !important;
     color: #000000 !important;
-    page-break-inside: avoid;
+    page-break-inside: auto !important;
   }
 
   /* Ensure colors and background-colors print correctly */
