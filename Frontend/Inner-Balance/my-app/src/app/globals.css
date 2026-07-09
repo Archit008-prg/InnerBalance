@@ -152,6 +152,13 @@ button, a, input, textarea, select {
     position: static !important;
     box-shadow: none !important;
   }
+
+  /* Force all collapsible section panels to expand and display in the printed document */
+  .printable-section-content {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
   
   /* Format clinical report card to print nicely on A4 */
   .printable-report-card {

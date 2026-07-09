@@ -443,8 +443,7 @@ export default function DoctorDashboard() {
                       {expandedSections.severity ? "Collapse" : "Expand"}
                     </span>
                   </button>
-                  {expandedSections.severity && (
-                    <div className="p-5 border-t border-card-border space-y-4">
+                  <div className={`p-5 border-t border-card-border space-y-4 printable-section-content ${expandedSections.severity ? "block" : "hidden"}`}>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {/* Depression */}
                         <div className="space-y-1">
@@ -504,7 +503,7 @@ export default function DoctorDashboard() {
                         </div>
                       </div>
                     </div>
-                  )}
+                  </div>
                 </div>
 
                 {/* Collapsible Section 2: Physician Action Plan & Recommendations */}
@@ -521,8 +520,7 @@ export default function DoctorDashboard() {
                       {expandedSections.actionPlan ? "Collapse" : "Expand"}
                     </span>
                   </button>
-                  {expandedSections.actionPlan && (
-                    <div className="p-5 border-t border-card-border text-xs leading-relaxed space-y-4">
+                  <div className={`p-5 border-t border-card-border text-xs leading-relaxed space-y-4 printable-section-content ${expandedSections.actionPlan ? "block" : "hidden"}`}>
                       {/* Clinical Insights */}
                       <div>
                         <h5 className="font-bold text-foreground uppercase tracking-wider text-[10px] mb-2">Clinical Insights</h5>
@@ -554,7 +552,7 @@ export default function DoctorDashboard() {
                         </div>
                       </div>
                     </div>
-                  )}
+                  </div>
                 </div>
 
                 {/* Collapsible Section 3: Patient Dialogue Transcripts */}
@@ -571,8 +569,7 @@ export default function DoctorDashboard() {
                       {expandedSections.transcript ? "Collapse" : "Expand"}
                     </span>
                   </button>
-                  {expandedSections.transcript && (
-                    <div className="p-5 border-t border-card-border space-y-4">
+                  <div className={`p-5 border-t border-card-border space-y-4 printable-section-content ${expandedSections.transcript ? "block" : "hidden"}`}>
                       {report?.patient_responses && report.patient_responses.length > 0 ? (
                         <div className="space-y-4">
                           {report.patient_responses.map((resp, idx) => (
@@ -590,7 +587,7 @@ export default function DoctorDashboard() {
                         <p className="text-text-muted text-xs">No written dialogue responses recorded.</p>
                       )}
                     </div>
-                  )}
+                  </div>
                 </div>
 
                 {/* Collapsible Section 4: Referred Clinical Guidelines & Citations */}
@@ -607,8 +604,7 @@ export default function DoctorDashboard() {
                       {expandedSections.citations ? "Collapse" : "Expand"}
                     </span>
                   </button>
-                  {expandedSections.citations && (
-                    <div className="p-5 border-t border-card-border text-xs leading-relaxed space-y-2">
+                  <div className={`p-5 border-t border-card-border text-xs leading-relaxed space-y-2 printable-section-content ${expandedSections.citations ? "block" : "hidden"}`}>
                       {report?.referred_sources && report.referred_sources.length > 0 ? (
                         <>
                           <p className="text-text-muted mb-3">
@@ -627,7 +623,7 @@ export default function DoctorDashboard() {
                         <p className="text-text-muted">No reference materials cited.</p>
                       )}
                     </div>
-                  )}
+                  </div>
                 </div>
 
                 {/* Collapsible Section 5: Patient Screening Responses */}
@@ -644,8 +640,7 @@ export default function DoctorDashboard() {
                       {expandedSections.screening ? "Collapse" : "Expand"}
                     </span>
                   </button>
-                  {expandedSections.screening && (
-                    <div className="p-5 border-t border-card-border space-y-4">
+                  <div className={`p-5 border-t border-card-border space-y-4 printable-section-content ${expandedSections.screening ? "block" : "hidden"}`}>
                       {selectedItem.answers && selectedItem.answers.filter(a => !a.is_follow_up).length > 0 ? (
                         <div className="space-y-3">
                           {selectedItem.answers.filter(a => !a.is_follow_up).map((ans, idx) => {
@@ -689,7 +684,7 @@ export default function DoctorDashboard() {
                         <p className="text-text-muted text-xs">No screening answers recorded.</p>
                       )}
                     </div>
-                  )}
+                  </div>
                 </div>
 
                 {/* AI Warning Disclaimer */}
