@@ -984,8 +984,8 @@ JSON only:"""
                 "sleep_disturbance": analysis["sleep_disturbance"],
                 "overall": "severe" if risk_level in ["high", "crisis"] else "moderate" if risk_level == "moderate" else "minimal"
             },
-            "anxiety_intensity": anxiety_intensity,
-            "depression_intensity": depression_intensity,
+            "anxiety_intensity": anx_intensity,
+            "depression_intensity": dep_intensity,
             "functioning_difficulty": analysis["functioning_difficulty"],
             "clinical_insights": clinical_insights,
             "functional_impact": functional_impact,
