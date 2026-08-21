@@ -504,7 +504,6 @@ export default function DoctorDashboard() {
                       </div>
                     </div>
                   </div>
-                </div>
 
                 {/* Collapsible Section 2: Physician Action Plan & Recommendations */}
                 <div className="border border-card-border rounded-2xl overflow-hidden mb-4 bg-background/40">
@@ -553,7 +552,6 @@ export default function DoctorDashboard() {
                       </div>
                     </div>
                   </div>
-                </div>
 
                 {/* Collapsible Section 3: Patient Dialogue Transcripts */}
                 <div className="border border-card-border rounded-2xl overflow-hidden mb-4 bg-background/40">
@@ -588,7 +586,6 @@ export default function DoctorDashboard() {
                       )}
                     </div>
                   </div>
-                </div>
 
                 {/* Collapsible Section 4: Referred Clinical Guidelines & Citations */}
                 <div className="border border-card-border rounded-2xl overflow-hidden bg-background/40">
@@ -624,7 +621,6 @@ export default function DoctorDashboard() {
                       )}
                     </div>
                   </div>
-                </div>
 
                 {/* Collapsible Section 5: Patient Screening Responses */}
                 <div className="border border-card-border rounded-2xl overflow-hidden mt-4 bg-background/40">
@@ -685,7 +681,6 @@ export default function DoctorDashboard() {
                       )}
                     </div>
                   </div>
-                </div>
 
                 {/* AI Warning Disclaimer */}
                 <div className="mt-8 border-t border-card-border pt-4 flex items-center justify-center gap-2 text-[#E53E3E] text-xs font-bold leading-relaxed no-print">
