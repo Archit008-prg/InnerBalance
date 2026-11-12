@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
@@ -10,10 +11,29 @@ if (typeof window !== "undefined") {
 }
 
 const CallToAction = () => {
+  const router = useRouter();
   const containerRef = useRef(null);
   const titleRef = useRef(null);
   const textRef = useRef(null);
   const buttonRef = useRef(null);
+
+  const handleStartReflection = (e) => {
+    e.preventDefault();
+    const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
+    const role = typeof window !== "undefined" ? localStorage.getItem("user_role") : null;
+
+    if (!token) {
+      router.push("/login?redirect=/test");
+      return;
+    }
+
+    if (role === "doctor") {
+      router.push("/doctor");
+      return;
+    }
+
+    router.push("/test");
+  };
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -75,12 +95,14 @@ const CallToAction = () => {
             with open arms and no judgment.
           </p>
 
-          <Link href="/test" ref={buttonRef}>
-            <button className="px-8 py-3.5 bg-white hover:bg-slate-100 text-slate-900 font-bold rounded-full shadow-2xl hover:shadow-white/20 transition transform hover:scale-105 active:scale-95 text-xs sm:text-sm flex items-center gap-1.5 cursor-pointer">
-              Start your first reflection
-              <span>→</span>
-            </button>
-          </Link>
+          <button
+            ref={buttonRef}
+            onClick={handleStartReflection}
+            className="px-8 py-3.5 bg-white hover:bg-slate-100 text-slate-900 font-bold rounded-full shadow-2xl hover:shadow-white/20 transition transform hover:scale-105 active:scale-95 text-xs sm:text-sm flex items-center gap-1.5 cursor-pointer"
+          >
+            Start your first reflection
+            <span>→</span>
+          </button>
         </div>
       </div>
     </section>

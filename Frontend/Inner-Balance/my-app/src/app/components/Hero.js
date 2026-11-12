@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import greenFocus from "./assets/green_focus.png";
@@ -12,9 +13,29 @@ if (typeof window !== "undefined") {
 }
 
 const Hero = () => {
+  const router = useRouter();
   const heroRef = useRef(null);
   const leftColRef = useRef(null);
   const rightColRef = useRef(null);
+
+  const handleTalkToSerenity = (e) => {
+    e.preventDefault();
+    const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
+    const role = typeof window !== "undefined" ? localStorage.getItem("user_role") : null;
+
+    if (!token) {
+      router.push("/login?redirect=/test");
+      return;
+    }
+
+    if (role === "doctor") {
+      alert("Serenity Clinical Intake is designed exclusively for patients. As a clinician, you can review completed intakes from your Clinician Dashboard.");
+      router.push("/doctor");
+      return;
+    }
+
+    router.push("/test");
+  };
 
   // Monitor dark mode class on document element
   const [isDarkMode, setIsDarkMode] = useState(false);
@@ -112,12 +133,13 @@ const Hero = () => {
 
           {/* Action buttons row */}
           <div className="flex flex-wrap gap-4 mt-2">
-            <Link href="/test">
-              <button className="px-8 py-3.5 bg-primary-accent hover:bg-primary-accent/90 dark:bg-white dark:hover:bg-white/95 text-white dark:text-slate-900 font-bold rounded-full shadow-lg hover:shadow-primary-accent/25 dark:hover:shadow-white/20 transition transform hover:scale-105 active:scale-95 text-xs sm:text-sm flex items-center gap-1.5 cursor-pointer">
-                Talk to Serenity
-                <span>→</span>
-              </button>
-            </Link>
+            <button
+              onClick={handleTalkToSerenity}
+              className="px-8 py-3.5 bg-primary-accent hover:bg-primary-accent/90 dark:bg-white dark:hover:bg-white/95 text-white dark:text-slate-900 font-bold rounded-full shadow-lg hover:shadow-primary-accent/25 dark:hover:shadow-white/20 transition transform hover:scale-105 active:scale-95 text-xs sm:text-sm flex items-center gap-1.5 cursor-pointer"
+            >
+              Talk to Serenity
+              <span>→</span>
+            </button>
             
             <Link href="/about">
               <button className="px-6 py-3.5 bg-slate-900/5 hover:bg-slate-900/10 dark:bg-white/5 dark:hover:bg-white/10 border border-card-border text-foreground font-bold rounded-full transition text-xs sm:text-sm cursor-pointer">

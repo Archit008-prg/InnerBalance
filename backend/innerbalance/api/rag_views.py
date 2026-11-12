@@ -121,9 +121,15 @@ def generate_clinical_report(request):
             follow_up_responses
         )
         
-        # Calculate scores
-        depression_score = sum(int(processed_initial.get(o, 0)) for o in [1, 2, 3, 4, 5, 11, 12, 13])
-        anxiety_score = sum(int(processed_initial.get(o, 0)) for o in [6, 7, 8, 9, 10, 14, 15])
+        # Calculate scores directly from report or processed initial answers
+        scores = report.get('scores', {})
+        depression_score = scores.get('depression', sum(int(processed_initial.get(o, 0)) for o in [1, 2, 3, 4, 5]))
+        anxiety_score = scores.get('anxiety', sum(int(processed_initial.get(o, 0)) for o in [6, 7, 8, 9, 10]))
+        # Include legacy indices if present
+        if any(o in processed_initial for o in [11, 12, 13]):
+            depression_score += sum(int(processed_initial.get(o, 0)) for o in [11, 12, 13])
+        if any(o in processed_initial for o in [14, 15]):
+            anxiety_score += sum(int(processed_initial.get(o, 0)) for o in [14, 15])
         overall_score = depression_score + anxiety_score
         
         # Map risk level choices

@@ -53,10 +53,17 @@ export default function LoginPage() {
 
     try {
       const profile = await login(username, password);
+      const params = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+      const redirectUrl = params ? params.get('redirect') : null;
+
       if (profile.role === "doctor") {
         router.push("/doctor");
       } else if (profile.role === "patient") {
-        router.push("/patient");
+        if (redirectUrl === "/test") {
+          router.push("/test");
+        } else {
+          router.push("/patient");
+        }
       } else {
         router.push("/");
       }

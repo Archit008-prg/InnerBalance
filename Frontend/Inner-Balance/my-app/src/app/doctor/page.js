@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { 
   Loader2, User, FileText, Activity, BookOpen, AlertCircle, 
   Search, ShieldAlert, LogOut, CheckCircle2, ChevronRight, 
-  Printer, Calendar, Mail, Phone, MapPin, Heart
+  Printer, Calendar, Mail, Phone, MapPin, Heart, Sparkles
 } from "lucide-react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
@@ -411,21 +411,45 @@ export default function DoctorDashboard() {
                       <span className="text-[10px] font-bold text-text-muted uppercase mb-1">Score Overview</span>
                       <div className="flex justify-between">
                         <span className="text-text-muted">Depression:</span>
-                        <span className="font-bold text-foreground">{selectedItem.scores.depression} / 24</span>
+                        <span className="font-bold text-foreground">
+                          {selectedItem.scores.depression} / {report?.scores?.max_subscale || 15}
+                        </span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-text-muted">Anxiety:</span>
-                        <span className="font-bold text-foreground">{selectedItem.scores.anxiety} / 21</span>
+                        <span className="font-bold text-foreground">
+                          {selectedItem.scores.anxiety} / {report?.scores?.max_subscale || 15}
+                        </span>
                       </div>
-                      {report?.anxiety_intensity !== undefined && (
-                        <div className="flex justify-between">
-                          <span className="text-text-muted">Max Distress:</span>
-                          <span className="font-bold text-primary-accent">
-                            {Math.max(parseFloat(report.anxiety_intensity || 1.0), parseFloat(report.depression_intensity || 1.0)).toFixed(1)} / 5.0
+                      <div className="flex justify-between">
+                        <span className="text-text-muted">Total Score:</span>
+                        <span className="font-bold text-primary-accent">
+                          {selectedItem.scores.overall || (selectedItem.scores.depression + selectedItem.scores.anxiety)} / {(report?.scores?.max_subscale || 15) * 2}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Clinical Zest Narrative Box for Attending Doctor */}
+                    {report?.clinical_zest && report.clinical_zest !== "No written responses submitted." && (
+                      <div className="md:col-span-3 bg-card-bg/50 border border-card-border p-4 rounded-2xl">
+                        <div className="flex items-center gap-1.5 mb-2">
+                          <Sparkles size={15} className="text-primary-accent" />
+                          <span className="text-[11px] font-bold text-primary-accent uppercase tracking-wider">
+                            Narrative Essence (Clinical Zest extracted for Doctor)
                           </span>
                         </div>
-                      )}
-                    </div>
+                        <pre className="whitespace-pre-wrap font-sans text-xs text-foreground/95 leading-relaxed bg-background/50 p-3.5 rounded-xl border border-card-border">
+                          {report.clinical_zest}
+                        </pre>
+                      </div>
+                    )}
+
+                    {/* Vague / Non-informative notice */}
+                    {report?.response_validity?.vague_notice && (
+                      <div className="md:col-span-3 bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400 p-3.5 rounded-2xl text-xs leading-relaxed">
+                        {report.response_validity.vague_notice}
+                      </div>
+                    )}
                   </div>
                 </div>
 
