@@ -1,22 +1,21 @@
 from django.db import models
-
-# Create your models here.
-
 from django.contrib.auth.models import User
 import uuid
 
+
 def generate_unique_id():
     return uuid.uuid4().hex[:10].upper()
+
 
 class Patient(models.Model):
     GENDER_CHOICES = [
         ('M', 'Male'),
         ('F', 'Female'),
         ('O', 'Other'),
-        ('N', 'Prefer not to say')
+        ('N', 'Prefer not to say'),
     ]
-    
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='patient')
     patient_id = models.CharField(max_length=10, unique=True, default=generate_unique_id)
     date_of_birth = models.DateField(null=True, blank=True)
     gender = models.CharField(max_length=1, choices=GENDER_CHOICES, blank=True)
@@ -29,23 +28,47 @@ class Patient(models.Model):
     marital_status = models.CharField(max_length=50, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    
+
+    class Meta:
+        verbose_name = 'Patient'
+        verbose_name_plural = 'Patients'
+
     def __str__(self):
         return f"{self.user.first_name} {self.user.last_name} ({self.patient_id})"
-    
+
     def save(self, *args, **kwargs):
         if not self.patient_id:
             self.patient_id = generate_unique_id()
         super().save(*args, **kwargs)
 
+    @property
+    def role(self):
+        return 'patient'
+
+
 class Doctor(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='doctor')
     doctor_id = models.CharField(max_length=10, unique=True, default=generate_unique_id)
     specialization = models.CharField(max_length=100)
     license_number = models.CharField(max_length=50)
     years_of_experience = models.IntegerField(default=0)
     hospital_affiliation = models.CharField(max_length=200, blank=True)
+    # Verification flag — set to True after manual/admin review (future use)
+    is_verified = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
-    
+
+    class Meta:
+        verbose_name = 'Doctor'
+        verbose_name_plural = 'Doctors'
+
     def __str__(self):
         return f"Dr. {self.user.last_name} ({self.specialization})"
+
+    def save(self, *args, **kwargs):
+        if not self.doctor_id:
+            self.doctor_id = generate_unique_id()
+        super().save(*args, **kwargs)
+
+    @property
+    def role(self):
+        return 'doctor'
